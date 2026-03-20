@@ -28,7 +28,8 @@ end
 local Library = getgenv().Library
 
 if type(Library) ~= "table" then
-	Library = { }
+	Library = {}
+
 	getgenv().Library = Library
 end
 
@@ -1225,7 +1226,6 @@ local Library do
 		local Success, Result = Library:SafeCall(function()
 			for Index, Value in Library.Flags do 
 				if type(Value) == "table" and Value.Color and StringFind(Value.Flag, "ThemingThing") then
-					print("FOUND")
 					Config[Index] = {Color = "#" .. Value.HexValue, Alpha = Value.Alpha}
 				end
 			end
@@ -1353,7 +1353,7 @@ local Library do
 	end
 
 	Library.CheckForAutoLoad = function(self)
-		local ConfigContent = isfile(Library.Folders_Path.Directory .. "/autoload.json") and readfile(Library.Folders_Path.Directory .. "/autoload.json")
+		local ConfigContent = readfile(Library.Folders_Path.Directory .. "/autoload.json")
 
 		if ConfigContent == "" then
 			return
@@ -4351,13 +4351,13 @@ local Library do
 			Items["ContentHolder"] = Instances:Create("Frame", {
 				Parent = Items["Section"].Instance,
 				Name = "\0",
-				ClipsDescendants = true,
 				BorderSizePixel = 0,
 				BorderColor3 = FromRGB(0, 0, 0),
 				BackgroundTransparency = 1,
 				Position = UDim2New(0, 8, 0, 32),
 				Size = UDim2New(1, -16, 0, 0),
-				ZIndex = 2
+				ZIndex = 2,
+				AutomaticSize = Enum.AutomaticSize.Y
 			})
 
 			Items["Content"] = Instances:Create("Frame", {
@@ -4372,6 +4372,12 @@ local Library do
 				AutomaticSize = Enum.AutomaticSize.Y
 			})
 
+			Instances:Create("UIPadding", {
+				Parent = Items["Content"].Instance,
+				Name = "\0",
+				PaddingBottom = UDimNew(0, 8)
+			})
+
 			local ListLayout = Instances:Create("UIListLayout", {
 				Parent = Items["Content"].Instance,
 				Name = "\0",
@@ -4379,15 +4385,22 @@ local Library do
 				SortOrder = Enum.SortOrder.LayoutOrder
 			})
 
-			-- HÀM CẬP NHẬT CHIỀU CAO THỰC TẾ (Đây là chìa khóa 100%)
+			local CurrentHeight = 0
+
 			local function UpdateSize()
-				if not Section.Collapsed then
-					-- Lấy chiều cao từ UIListLayout (chính xác hơn AbsoluteSize của Frame)
-					local RealHeight = ListLayout.Instance.AbsoluteContentSize.Y
-					Items["ContentHolder"]:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						Size = UDim2New(1, -16, 0, RealHeight + 15) -- Bù thêm 15px an toàn
-					})
-				end
+				if Section.Collapsed then return end
+
+				wait()
+
+				local TargetHeight = Items["Content"].Instance.AbsoluteSize.Y
+
+				if TargetHeight == CurrentHeight then return end
+				CurrentHeight = TargetHeight
+
+				local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+				Items["ContentHolder"]:Tween(tweenInfo, {
+					Size = UDim2New(1, -16, 0, TargetHeight)
+				})
 			end
 
 			function Section:SetCollapsed(Bool)
@@ -4409,13 +4422,11 @@ local Library do
 						ImageColor3 = Library.Theme["Accent"]
 					})
 					Items["Content"].Instance.Visible = true
-
-					-- Đợi layout ổn định rồi mới lấy size
-					task.delay(0.05, UpdateSize)
+					CurrentHeight = 0 
+					UpdateSize()
 				end
 			end
 
-			-- Theo dõi nếu có thêm item mới vào Section thì tự nở rộng ra thêm
 			ListLayout.Instance:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateSize)
 
 			Items["Header"]:Connect("MouseButton1Down", function()
@@ -6689,18 +6700,19 @@ local Library do
 					Flag = "Config Name",
 					Description = "Name of the config",                   
 					Placeholder = "Config name...",
+					Finished = true,
 					Callback = function(Value)
-						Config_Name = Value 
+						Config_Name = Value 					
 					end
 				})
 
-				ConfigHub_Section:Button():Add("Create", function()
+				ConfigHub_Section:Button():Add("Create", function()				
 					if Config_Name then 
 						if Config_Name == "" then 
 							return
 						end
 
-						writefile(Library:GetFolder().. Config_Name .. ".json", Library:GetConfig())
+						writefile(Library:GetFolder() .. Config_Name .. ".json", Library:GetConfig())
 						Library:RefreshConfigsList(Config_Dropdown)
 
 						Library:Notification({
@@ -6908,6 +6920,7 @@ local Library do
 					Flag = "Theme Name",
 					Description = "Enter a name for your theme",
 					Placeholder = "Theme name...",
+					Finished = true,
 					Callback = function(Value)
 						Theme_Name = Value 
 					end
@@ -6919,7 +6932,7 @@ local Library do
 							return
 						end
 
-						writefile(Library:GetFolderTheme().. Theme_Name .. ".json", Library:GetTheme())
+						writefile(Library:GetFolderTheme() .. Theme_Name .. ".json", Library:GetTheme())
 						Library:RefreshThemeList(Theme_Dropdown)
 
 						Library:Notification({
