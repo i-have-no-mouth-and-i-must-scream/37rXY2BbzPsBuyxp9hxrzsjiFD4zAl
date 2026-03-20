@@ -161,6 +161,52 @@ local Library do
 
 		OpenFrames = { },
 
+		SliderElements = { },
+		TextboxElements = { },
+		SectionElements = { },
+
+		HideOnOverlap = function(self, IsOpen, OptionHolder)
+			if not IsOpen then
+				for _, SliderData in pairs(Library.SliderElements) do
+					SliderData.Accent.Instance.BackgroundTransparency = 0
+					SliderData.RealSlider.Instance.BackgroundTransparency = 0
+				end
+				for _, TextboxData in pairs(Library.TextboxElements) do
+					TextboxData.Input.Instance.TextTransparency = 0
+				end
+				return
+			end
+
+			if not OptionHolder or not OptionHolder.Parent then return end
+
+			local dropTop = OptionHolder.AbsolutePosition.Y
+			local dropBottom = dropTop + OptionHolder.AbsoluteSize.Y
+
+			for _, SliderData in pairs(Library.SliderElements) do
+				local sliderTop = SliderData.RealSlider.Instance.AbsolutePosition.Y
+				local sliderBottom = sliderTop + SliderData.RealSlider.Instance.AbsoluteSize.Y
+
+				if sliderBottom > dropTop and sliderTop < dropBottom then
+					SliderData.Accent.Instance.BackgroundTransparency = 1
+					SliderData.RealSlider.Instance.BackgroundTransparency = 1
+				else
+					SliderData.Accent.Instance.BackgroundTransparency = 0
+					SliderData.RealSlider.Instance.BackgroundTransparency = 0
+				end
+			end
+
+			for _, TextboxData in pairs(Library.TextboxElements) do
+				local tbTop = TextboxData.Background.Instance.AbsolutePosition.Y
+				local tbBottom = tbTop + TextboxData.Background.Instance.AbsoluteSize.Y
+
+				if tbBottom > dropTop and tbTop < dropBottom then
+					TextboxData.Input.Instance.TextTransparency = 1
+				else
+					TextboxData.Input.Instance.TextTransparency = 0
+				end
+			end
+		end,
+
 		SetFlags = { },
 		Themes = { },
 
@@ -349,6 +395,10 @@ local Library do
 		Tween.__index = Tween
 
 		Tween.Create = function(self, Item, Info, Goal, IsRawItem)
+			if not Library then
+				return
+			end
+
 			Item = IsRawItem and Item or Item.Instance
 			Info = Info or TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction)
 
@@ -394,12 +444,14 @@ local Library do
 				[Property] = Visibility and OldTransparency or 1
 			}, true)
 
-			Library:Connect(NewTween.Tween.Completed, function()
-				if not Visibility then 
-					wait()
-					Item[Property] = OldTransparency
-				end
-			end)
+			if NewTween and NewTween.Tween then
+				Library:Connect(NewTween.Tween.Completed, function()
+					if not Visibility then
+						wait()
+						Item[Property] = OldTransparency
+					end
+				end)
+			end
 
 			return NewTween
 		end
@@ -493,7 +545,11 @@ local Library do
 		end
 
 		Instances.Tween = function(self, Info, Goal)
-			if not self.Instance then 
+			if not self.Instance then
+				return
+			end
+
+			if not Library then
 				return
 			end
 
@@ -1327,15 +1383,13 @@ local Library do
 				Hue = 0,
 				Saturation = 0,
 				Value = 0,
-
 				Alpha = 0,
 
 				Flag = Data.Flag,
-
 				Color = FromRGB(255, 255, 255),
 				HexValue = "#FFFFFF",
-				Disabled = false,
 
+				Disabled = false,
 				IsOpen = false
 			}
 
@@ -1643,7 +1697,7 @@ local Library do
 				Value = {},
 				Multi = true,
 				Callback = function() end,
-				Flag = Colorpicker.Flag .. "Animation_",
+				Flag = Colorpicker.Flag .. " Animation",
 				Options = { },
 				MaxSize = 280,
 			}
@@ -1731,17 +1785,17 @@ local Library do
 			Items["Icon"] = Instances:Create("ImageLabel", {
 				Parent = Items["RealDropdown"].Instance,
 				Name = "\0",
-				ImageColor3 = Library.Theme["Accent"],
+				ImageColor3 = Library.Theme["Text"],
 				ScaleType = Enum.ScaleType.Fit,
 				BorderColor3 = FromRGB(0, 0, 0),
-				Size = UDim2New(0, 25, 0, 25),
-				AnchorPoint = Vector2New(1, 0.5),
-				Image = "rbxassetid://96215562143920",
+				Size = UDim2New(0, 23, 0, 23),
+				AnchorPoint = Vector2New(0.5, 0.5),
+				Image = "rbxassetid://126603363478667",
 				BackgroundTransparency = 1,
-				Position = UDim2New(1, -1, 0.5, 0),
+				Position = UDim2New(1, -13, 0.5, 0),
 				ZIndex = 2,
 				BorderSizePixel = 0
-			}):AddToTheme({ImageColor3 = 'Accent'})    
+			})    
 
 			Items["OptionHolder"] = Instances:Create("TextButton", {
 				Parent = Library.UnusedHolder.Instance,
@@ -1754,7 +1808,7 @@ local Library do
 				AnchorPoint = Vector2New(0, 0),
 				SelectionGroup = true,
 				Position = UDim2New(0, 0, 0, 5),
-				Size = UDim2New(0, 155, 0, 125),
+				Size = UDim2New(0, 125, 0, 125),
 				ZIndex = 5,
 				BorderSizePixel = 0,
 				BackgroundColor3 = Library.Theme["Background"]
@@ -1798,69 +1852,81 @@ local Library do
 				end
 			end
 
-			local function updateOptionHolderPosition()
-				if not Library or not Items["OptionHolder"].Instance.Parent then return end
-				local S = Library.UIScaleNum or 1
+			local function UpdatePosition()
+				if not Library or not Items or not Items["OptionHolder"] or not Items["OptionHolder"].Instance then return end
+				if not Items["AnimationsDropdown"] or not Items["AnimationsDropdown"].Instance then return end
+				local Scale = Library.UIScaleNum or 1
+
 				local btn = Items["RealDropdown"].Instance
-				local mf = Colorpicker.Window.Items["MainFrame"].Instance
-				local mf_x, mf_y = mf.AbsolutePosition.X, mf.AbsolutePosition.Y
-				local mf_right = mf_x + mf.AbsoluteSize.X - 8
-				local mf_bottom = mf_y + mf.AbsoluteSize.Y - 8
+				local ad = Items["AnimationsDropdown"].Instance
 
-				local left = math.max(btn.AbsolutePosition.X, mf_x + 8)
-				local out_w = math.min(btn.AbsolutePosition.X + btn.AbsoluteSize.X, mf_right) - left
-				local drop_h = AnimDropdown.MaxSize
-				local space_below = mf_bottom - (btn.AbsolutePosition.Y + btn.AbsoluteSize.Y + 5)
+				local left = btn.AbsolutePosition.X
+				local out_w = btn.AbsoluteSize.X
+				local top = ad.AbsolutePosition.Y - 130
+				local drop_h = math.min(AnimDropdown.MaxSize, 125)
 
-				if space_below >= drop_h then
-					local top = btn.AbsolutePosition.Y + btn.AbsoluteSize.Y + 5
-
-					Items["OptionHolder"].Instance.Position = UDim2New(0, left / S, 0, top / S)
-					Items["OptionHolder"].Instance.Size = UDim2New(0, out_w / S, 0, (math.min(top + drop_h, mf_bottom) - top) / S)
-				else
-					local list_bottom = btn.AbsolutePosition.Y - 5
-					local top = math.max(list_bottom - drop_h, mf_y + 8)
-
-					Items["OptionHolder"].Instance.Position = UDim2New(0, left / S, 0, top / S)
-					Items["OptionHolder"].Instance.Size = UDim2New(0, out_w / S, 0, (list_bottom - top) / S)
-				end
+				Items["OptionHolder"].Instance.Position = UDim2New(0, left / Scale, 0, top / Scale)
+				Items["OptionHolder"].Instance.Size = UDim2New(0, out_w / Scale, 0, drop_h / Scale)
 			end
 
 			function AnimDropdown:SetOpen(Bool)
-				if Debounce then 
+				if Debounce then
 					return
 				end
 
 				AnimDropdown.IsOpen = Bool
 
-				Debounce = true 
+				Debounce = true
 
-				if AnimDropdown.IsOpen then 
+				if AnimDropdown.IsOpen then
+					if Items["Icon"] and Items["Icon"].Instance then
+						Items["Icon"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+							Rotation = 90,
+							ImageColor3 = Library.Theme["Accent"]
+						})
+					end
+				else
+					if Items["Icon"] and Items["Icon"].Instance then
+						Items["Icon"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+							Rotation = 0,
+							ImageColor3 = Library.Theme["Text"]
+						})
+					end
+				end
+
+				if not Items["OptionHolder"] or not Items["OptionHolder"].Instance then
+					Debounce = false
+					return
+				end
+
+				if AnimDropdown.IsOpen then
 					Items["OptionHolder"].Instance.Parent = Library.Holder.Instance
-					updateOptionHolderPosition()
+					UpdatePosition()
 					Items["OptionHolder"].Instance.Visible = true
 
 					RenderStepped = RunService.RenderStepped:Connect(function()
 						if not Library then return end
-						updateOptionHolderPosition()
+						UpdatePosition()
 					end)
 
-					for Index, Value in Library.OpenFrames do 
-						if Value ~= AnimDropdown and Value ~= Colorpicker then 
+					for Index, Value in Library.OpenFrames do
+						if Value ~= AnimDropdown and Value ~= Colorpicker then
 							Value:SetOpen(false)
 						end
 					end
 
-					Library.OpenFrames[AnimDropdown] = AnimDropdown 
+					Library.OpenFrames[AnimDropdown] = AnimDropdown
 				else
-					if Library.OpenFrames[AnimDropdown] then 
+					if Library.OpenFrames[AnimDropdown] then
 						Library.OpenFrames[AnimDropdown] = nil
 					end
 
-					if RenderStepped then 
+					if RenderStepped then
 						RenderStepped:Disconnect()
 						RenderStepped = nil
 					end
+
+					Library:HideOnOverlap(false, nil)
 				end
 
 				local Descendants = Items["OptionHolder"].Instance:GetDescendants()
@@ -1888,8 +1954,16 @@ local Library do
 					end
 				end
 
+				if not NewTween or not NewTween.Tween then
+					Debounce = false
+					Items["OptionHolder"].Instance.Visible = AnimDropdown.IsOpen
+					wait(0.2)
+					Items["OptionHolder"].Instance.Parent = not AnimDropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
+					return
+				end
+
 				NewTween.Tween.Completed:Connect(function()
-					Debounce = false 
+					Debounce = false
 					Items["OptionHolder"].Instance.Visible = AnimDropdown.IsOpen
 					wait(0.2)
 					Items["OptionHolder"].Instance.Parent = not AnimDropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
@@ -2063,9 +2137,10 @@ local Library do
 
 					RenderStepped = RunService.RenderStepped:Connect(function()
 						local btn = Items["ColorpickerButton"].Instance
+
 						Items["ColorpickerWindow"].Instance.Position = UDim2New(
 							0, btn.AbsolutePosition.X,
-							0, btn.AbsolutePosition.Y + btn.AbsoluteSize.Y + 5
+							0, btn.AbsolutePosition.Y - 280
 						)
 					end)
 
@@ -2079,16 +2154,18 @@ local Library do
 
 					Library.OpenFrames[Colorpicker] = Colorpicker 
 				else
-					if Library.OpenFrames[Colorpicker] then 
+					if Library.OpenFrames[Colorpicker] then
 						Library.OpenFrames[Colorpicker] = nil
 					end
 
-					if RenderStepped then 
+					if RenderStepped then
 						RenderStepped:Disconnect()
 						RenderStepped = nil
 					end
 
-					AnimDropdown:SetOpen(false)
+					if AnimDropdown then
+						AnimDropdown:SetOpen(false)
+					end
 
 					Items["ColorpickerWindow"]:Tween(nil, {Size = UDim2New(0, 218, 0, 0)})
 				end
@@ -2119,8 +2196,16 @@ local Library do
 					end
 				end
 
+				if not NewTween or not NewTween.Tween then
+					Debounce = false
+					Items["ColorpickerWindow"].Instance.Visible = Colorpicker.IsOpen
+					wait(0.2)
+					Items["ColorpickerWindow"].Instance.Parent = not Colorpicker.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
+					return
+				end
+
 				NewTween.Tween.Completed:Connect(function()
-					Debounce = false 
+					Debounce = false
 					Items["ColorpickerWindow"].Instance.Visible = Colorpicker.IsOpen
 					wait(0.2)
 					Items["ColorpickerWindow"].Instance.Parent = not Colorpicker.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
@@ -2251,8 +2336,8 @@ local Library do
 					OldColor = Colorpicker.Color
 
 					Library:Thread(LPH_NO_VIRTUALIZE(function()
-						while wait() do 
-							local RainbowHue = MathAbs(MathSin(tick() * 0.32))
+						while wait(0.03) do 
+							local RainbowHue = MathAbs(MathSin(tick() * 0.33))
 							local Color = FromHSV(RainbowHue, 1, 1)
 
 							Colorpicker:Set(Color, Colorpicker.Alpha)
@@ -2268,6 +2353,7 @@ local Library do
 				if TableFind(Value, "Breathing") then 
 					Library:Thread(LPH_NO_VIRTUALIZE(function()
 						OldAlpha = Colorpicker.Alpha
+
 						while wait() do 
 							local AlphaValue = MathAbs(MathSin(tick() * 0.8))
 
@@ -2356,6 +2442,7 @@ local Library do
 			Items["Input"]:Connect("FocusLost", function()
 				local RGBText  = Items["Input"].Instance.Text
 				local R, G, B = RGBText:match("(%d+),%s*(%d+),%s*(%d+)")
+
 				R, G, B = tonumber(R), tonumber(G), tonumber(B)
 				Colorpicker:Set(FromRGB(R, G, B), Colorpicker.Alpha)
 			end)
@@ -2405,15 +2492,19 @@ local Library do
 				if type(Value) ~= "table" then
 					Value = { }
 				end
+
 				AnimDropdown.Value = Value
 				Library.Flags[AnimDropdown.Flag] = AnimDropdown.Value
+
 				local TextFormat = #AnimDropdown.Value > 0 and TableConcat(AnimDropdown.Value, ", ") or "..."
 				Items["Value"].Instance.Text = TextFormat
+
 				for OptName, OptionData in AnimDropdown.Options do
 					local selected = TableFind(AnimDropdown.Value, OptName)
 					OptionData.Selected = selected ~= nil
 					OptionData:Toggle(selected and "Active" or "Inactive")
 				end
+
 				if AnimDropdown.Callback then
 					Library:SafeCall(AnimDropdown.Callback, AnimDropdown.Value)
 				end
@@ -2484,7 +2575,7 @@ local Library do
 					Visible = false,
 					Position = UDim2New(0.005164622329175472, 0, 0.34007585048675537, 0),
 					BorderColor3 = FromRGB(0, 0, 0),
-					Size = UDim2New(0, 90, 0, 90),
+					Size = UDim2New(0, 100, 0, 100),
 					BorderSizePixel = 0,
 					BackgroundColor3 = Library.Theme["Background"]
 				}):AddToTheme({BackgroundColor3 = 'Background'})
@@ -2676,6 +2767,7 @@ local Library do
 
 					RenderStepped = RunService.RenderStepped:Connect(function()
 						local btn = Items["KeyButton"].Instance
+
 						Items["KeybindWindow"].Instance.Position = UDim2New(
 							0, btn.AbsolutePosition.X,
 							0, btn.AbsolutePosition.Y + btn.AbsoluteSize.Y + 5
@@ -2725,8 +2817,16 @@ local Library do
 					end
 				end
 
+				if not NewTween or not NewTween.Tween then
+					Debounce = false
+					Items["KeybindWindow"].Instance.Visible = Keybind.IsOpen
+					wait(0.2)
+					Items["KeybindWindow"].Instance.Parent = not Keybind.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
+					return
+				end
+
 				NewTween.Tween.Completed:Connect(function()
-					Debounce = false 
+					Debounce = false
 					Items["KeybindWindow"].Instance.Visible = Keybind.IsOpen
 					wait(0.2)
 					Items["KeybindWindow"].Instance.Parent = not Keybind.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
@@ -2978,7 +3078,6 @@ local Library do
 
 			return Keybind, Items 
 		end
-
 
 		Library.Watermark = function(self, Name)
 			local Watermark = { }
@@ -3836,8 +3935,18 @@ local Library do
 					end
 				end
 
+				if not NewTween or not NewTween.Tween then
+					Debounce = false
+					Items["MainFrame"].Instance.Visible = Window.IsOpen
+					if Items["Cursor"] then
+						Items["Cursor"].Instance.Visible = Window.IsOpen
+					end
+					UserInputService.MouseIconEnabled = not Window.IsOpen
+					return
+				end
+
 				NewTween.Tween.Completed:Connect(function()
-					Debounce = false 
+					Debounce = false
 					Items["MainFrame"].Instance.Visible = Window.IsOpen
 					if Items["Cursor"] then
 						Items["Cursor"].Instance.Visible = Window.IsOpen
@@ -4212,21 +4321,26 @@ local Library do
 					TextSize = 14
 				}):AddToTheme({TextColor3 = 'Text'})
 
-				Items["Indicator"] = Instances:Create("TextLabel", {
+				Items["Indicator"] = Instances:Create("ImageLabel", {
 					Parent = Items["Header"].Instance,
 					Name = "\0",
-					FontFace = Library.Font,
-					TextColor3 = Library.Theme["Text"],
+					ImageColor3 = Library.Theme["Text"],
+					ScaleType = Enum.ScaleType.Fit,
 					BorderColor3 = FromRGB(0, 0, 0),
-					Text = "▼",
-					AutomaticSize = Enum.AutomaticSize.X,
-					Size = UDim2New(0, 0, 0, 15),
+					Size = UDim2New(0, 23, 0, 23),
+					AnchorPoint = Vector2New(0.5, 0.5),
+					Image = "rbxassetid://126603363478667",
 					BackgroundTransparency = 1,
-					Position = UDim2New(1, -19, 0, 7),
-					BorderSizePixel = 0,
+					Position = UDim2New(1, -15, 0.5, 0),
 					ZIndex = 2,
-					TextSize = 10
-				}):AddToTheme({TextColor3 = 'Text'})
+					BorderSizePixel = 0
+				})
+
+				Instances:Create("UIGradient", {
+					Parent = Items["Indicator"].Instance,
+					Name = "\0",
+					Transparency = NumSequence{NumSequenceKeypoint(0, 0), NumSequenceKeypoint(1, 0)}
+				})
 
 				Items["Line"] = Instances:Create("Frame", {
 					Parent = Items["Section"].Instance,
@@ -4273,7 +4387,7 @@ local Library do
 				Instances:Create("UIPadding", {
 					Parent = Items["Section"].Instance,
 					Name = "\0",
-					PaddingBottom = UDimNew(0, 8)
+					PaddingBottom = UDimNew(0, 13)
 				})
 
 				Items["Header"]:Connect("MouseButton1Down", function()
@@ -4289,7 +4403,18 @@ local Library do
 				end
 				Section.Collapsed = Bool
 				Items["Line"].Instance.Visible = not Section.Collapsed
-				Items["Indicator"].Instance.Text = Section.Collapsed and "▶" or "▼"
+
+				if Section.Collapsed then
+					Items["Indicator"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						Rotation = 0,
+						ImageColor3 = Library.Theme["Text"]
+					})
+				else
+					Items["Indicator"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						Rotation = 90,
+						ImageColor3 = Library.Theme["Accent"]
+					})
+				end
 
 				if Section.Collapsed then
 					Items["Content"].Instance.Visible = false
@@ -4313,7 +4438,12 @@ local Library do
 			Items["Line"].Instance.Visible = false
 			Section.Collapsed = true
 			Section:SetCollapsed(Section.DefaultCollapsed)
-			Items["Indicator"].Instance.Text = Section.Collapsed and "▶" or "▼"
+
+			if Section.Collapsed then
+				Items["Indicator"].Instance.Rotation = 0
+			else
+				Items["Indicator"].Instance.Rotation = 90
+			end
 
 			TableInsert(Library.AllSections, Section)
 
@@ -4350,7 +4480,7 @@ local Library do
 					AutoButtonColor = false,
 					BackgroundTransparency = 1,
 					BorderSizePixel = 0,
-					Size = UDim2New(1, 0, 0, Toggle.Description ~= nil and Toggle.Description ~= "" and 28 or 20),
+					Size = UDim2New(1, 0, 0, Toggle.Description ~= nil and Toggle.Description ~= "" and 28 or 17),
 					ZIndex = 2,
 					TextSize = 14
 				})
@@ -4638,7 +4768,7 @@ local Library do
 				Disabled = false,
 			}
 
-			local Items = { } do
+			local Items = { } do 
 				Items["Checkbox"] = Instances:Create("TextButton", {
 					Parent = Toggle.Section.Items["Content"].Instance,
 					Name = "\0",
@@ -4649,7 +4779,7 @@ local Library do
 					AutoButtonColor = false,
 					BackgroundTransparency = 1,
 					BorderSizePixel = 0,
-					Size = UDim2New(1, 0, 0, Toggle.Description ~= nil and Toggle.Description ~= "" and 28 or 20),
+					Size = UDim2New(1, 0, 0, Toggle.Description ~= nil and Toggle.Description ~= "" and 28 or 17),
 					ZIndex = 2,
 					TextSize = 14,
 					BackgroundColor3 = FromRGB(255, 255, 255)
@@ -5072,7 +5202,7 @@ local Library do
 					Parent = Slider.Section.Items["Content"].Instance,
 					Name = "\0",
 					BackgroundTransparency = 1,
-					Size = UDim2New(1, 0, 0, Slider.Description ~= nil and Slider.Description ~= "" and 54 or 40),
+					Size = UDim2New(1, 0, 0, Slider.Description ~= nil and Slider.Description ~= "" and 50 or 35),
 					BorderColor3 = FromRGB(0, 0, 0),
 					ZIndex = 2,
 					BorderSizePixel = 0
@@ -5090,6 +5220,7 @@ local Library do
 					AutomaticSize = Enum.AutomaticSize.X,
 					BackgroundTransparency = 1,
 					Size = UDim2New(0, 0, 0, 15),
+					Position = UDim2New(0, 0, 0, 0),
 					BorderSizePixel = 0,
 					ZIndex = 2,
 					TextSize = 14
@@ -5104,9 +5235,10 @@ local Library do
 						BorderColor3 = FromRGB(0, 0, 0),
 						TextTransparency = 0.5,
 						Text = Slider.Description,
+						TextXAlignment = Enum.TextXAlignment.Left,
 						AutomaticSize = Enum.AutomaticSize.X,
 						BackgroundTransparency = 1,
-						Position = UDim2New(0, 0, 0, 14),
+						Position = UDim2New(0, 0, 0, 16),
 						Size = UDim2New(0, 0, 0, 15),
 						BorderSizePixel = 0,
 						ZIndex = 2,
@@ -5114,88 +5246,7 @@ local Library do
 					}):AddToTheme({TextColor3 = 'Text'})
 				end
 
-				Items["ValueBackground"] = Instances:Create("Frame", {
-					Parent = Items["Slider"].Instance,
-					Name = "\0",
-					BorderColor3 = FromRGB(0, 0, 0),
-					AnchorPoint = Vector2New(1, 0),
-					Position = UDim2New(1, 0, 0, 0),
-					Size = UDim2New(0, 30, 0, 25),
-					ZIndex = 2,
-					BorderSizePixel = 0,
-					BackgroundColor3 = Library.Theme["Element"],
-					ClipsDescendants = true
-				}):AddToTheme({BackgroundColor3 = 'Element'})
-
-				Instances:Create("UIGradient", {
-					Parent = Items["ValueBackground"].Instance,
-					Name = "\0",
-					Rotation = 90,
-					Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(216, 216, 216))}
-				})
-
-				Instances:Create("UICorner", {
-					Parent = Items["ValueBackground"].Instance,
-					Name = "\0",
-					CornerRadius = UDimNew(0, 5)
-				})
-
-				Items["Value"] = Instances:Create("TextBox", {
-					Parent = Items["ValueBackground"].Instance,
-					Name = "\0",
-					FontFace = Library.Font,
-					TextStrokeColor3 = Library.Theme["Text"],
-					PlaceholderColor3 = Library.Theme["Inactive Text"],
-					TextSize = 14,
-					ClearTextOnFocus = false,
-					Size = UDim2New(0, 0, 1, 0),
-					AutomaticSize = Enum.AutomaticSize.X,
-					TextColor3 = Library.Theme["Text"],
-					BorderColor3 = FromRGB(0, 0, 0),
-					Text = "",
-					ZIndex = 2,
-					BackgroundTransparency = 1,
-					TextXAlignment = Enum.TextXAlignment.Center,
-					CursorPosition = -1,
-					Position = UDim2New(0.5, 0, 0.5, 0),
-					AnchorPoint = Vector2New(0.5, 0.5),
-					BorderSizePixel = 0
-				}):AddToTheme({TextColor3 = 'Text'})
-
 				local SliderFocused = false
-
-				Items["Value"]:Connect("Focused", function()
-					SliderFocused = true
-				end)
-
-				Items["Value"]:Connect("focusLost", function(enterPressed)
-					SliderFocused = false
-					if enterPressed then
-						local raw = Items["Value"].Instance.Text
-						local stripped = StringGSub(raw, "[^0-9%.%-]", "")
-						local InputValue = tonumber(stripped)
-						if InputValue then
-							Slider:Set(InputValue)
-						else
-							Items["Value"].Instance.Text = StringFormat("%s%s", Slider.Value, Slider.Suffix)
-						end
-					else
-						Items["Value"].Instance.Text = StringFormat("%s%s", Slider.Value, Slider.Suffix)
-					end
-				end)
-
-				Items["Value"]:Connect("Changed", function(Property)
-					if Property == "Text" then
-						local raw = Items["Value"].Instance.Text
-						local stripped = StringGSub(raw, "[^0-9%.%-]", "")
-						local NumValue = tonumber(stripped)
-						if NumValue then
-							Items["Value"].Instance.TextColor3 = Library.Theme["Text"]
-						elseif raw ~= "" and raw ~= Slider.Suffix then
-							Items["Value"].Instance.TextColor3 = FromRGB(255, 80, 80)
-						end
-					end
-				end)
 
 				Items["RealSlider"] = Instances:Create("TextButton", {
 					Parent = Items["Slider"].Instance,
@@ -5203,11 +5254,11 @@ local Library do
 					Active = false,
 					BorderColor3 = FromRGB(0, 0, 0),
 					Text = "",
-					Size = UDim2New(1, 0, 0, 15),
+					Size = UDim2New(1, -59, 0, 15),
 					AutoButtonColor = false,
-					AnchorPoint = Vector2New(0, 1),
+					AnchorPoint = Vector2New(0, 0),
 					ClipsDescendants = true,
-					Position = UDim2New(0, 0, 1, 0),
+					Position = UDim2New(0, 0, 0, Slider.Description ~= nil and Slider.Description ~= "" and 34 or 20),
 					Selectable = false,
 					ZIndex = 2,
 					BorderSizePixel = 0,
@@ -5218,7 +5269,7 @@ local Library do
 				Instances:Create("UICorner", {
 					Parent = Items["RealSlider"].Instance,
 					Name = "\0",
-					CornerRadius = UDimNew(1, 0)
+					CornerRadius = UDimNew(0, 5)
 				})
 
 				Instances:Create("UIGradient", {
@@ -5247,7 +5298,7 @@ local Library do
 				Instances:Create("UICorner", {
 					Parent = Items["Accent"].Instance,
 					Name = "\0",
-					CornerRadius = UDimNew(1, 0)
+					CornerRadius = UDimNew(0, 5)
 				})
 
 				Items["Drag"] = Instances:Create("Frame", {
@@ -5264,9 +5315,89 @@ local Library do
 				Instances:Create("UICorner", {
 					Parent = Items["Drag"].Instance,
 					Name = "\0",
-					CornerRadius = UDimNew(1, 0)
+					CornerRadius = UDimNew(0, 5)
 				})
+
+				Items["ValueBackground"] = Instances:Create("Frame", {
+					Parent = Items["Slider"].Instance,
+					Name = "\0",
+					BorderColor3 = FromRGB(0, 0, 0),
+					AnchorPoint = Vector2New(1, 0),
+					Position = UDim2New(1, 0, 0, Slider.Description ~= nil and Slider.Description ~= "" and 34 or 20),
+					Size = UDim2New(0, 55, 0, 15),
+					ZIndex = 2,
+					BorderSizePixel = 0,
+					BackgroundColor3 = Library.Theme["Element"],
+					ClipsDescendants = false
+				}):AddToTheme({BackgroundColor3 = 'Element'})
+
+				Instances:Create("UICorner", {
+					Parent = Items["ValueBackground"].Instance,
+					Name = "\0",
+					CornerRadius = UDimNew(0, 5)
+				})
+
+				Items["Value"] = Instances:Create("TextBox", {
+					Parent = Items["ValueBackground"].Instance,
+					Name = "\0",
+					FontFace = Library.Font,
+					PlaceholderColor3 = Library.Theme["Inactive Text"],
+					TextSize = 12,
+					ClearTextOnFocus = false,
+					Size = UDim2New(1, 0, 1, 0),
+					AutomaticSize = Enum.AutomaticSize.None,
+					TextColor3 = Library.Theme["Text"],
+					BorderColor3 = FromRGB(0, 0, 0),
+					Text = StringFormat("%s%s", Slider.Value, Slider.Suffix),
+					ZIndex = 5,
+					BackgroundTransparency = 1,
+					TextXAlignment = Enum.TextXAlignment.Center,
+					CursorPosition = -1,
+					Position = UDim2New(0, 0, 0, 0),
+					BorderSizePixel = 0,
+					TextScaled = false
+				}):AddToTheme({TextColor3 = 'Text'})
+
+				Items["Value"]:Connect("Focused", function()
+					SliderFocused = true
+					local stripped = StringGSub(Items["Value"].Instance.Text, "[^0-9%.%-]", "")
+					Items["Value"].Instance.Text = stripped
+				end)
+
+				Items["Value"]:Connect("focusLost", function(enterPressed)
+					SliderFocused = false
+					local raw = Items["Value"].Instance.Text
+					local stripped = StringGSub(raw, "[^0-9%.%-]", "")
+					local InputValue = tonumber(stripped)
+					if InputValue then
+						Slider:Set(InputValue)
+						Items["Value"].Instance.TextColor3 = Library.Theme["Text"]
+					else
+						Items["Value"].Instance.Text = StringFormat("%s%s", Slider.Value, Slider.Suffix)
+						Items["Value"].Instance.TextColor3 = Library.Theme["Text"]
+					end
+				end)
+
+				Items["Value"]:Connect("Changed", function(Property)
+					if Property == "Text" and SliderFocused then
+						local raw = Items["Value"].Instance.Text
+						local stripped = StringGSub(raw, "[^0-9%.%-]", "")
+						local NumValue = tonumber(stripped)
+						if NumValue then
+							Items["Value"].Instance.TextColor3 = Library.Theme["Text"]
+						elseif raw ~= "" then
+							Items["Value"].Instance.TextColor3 = FromRGB(255, 80, 80)
+						end
+					end
+				end)
 			end
+
+			Library.SliderElements[Slider] = {
+				Slider = Items["Slider"],
+				RealSlider = Items["RealSlider"],
+				Accent = Items["Accent"],
+				Drag = Items["Drag"]
+			}
 
 			function Slider:Get()
 				return Slider.Value 
@@ -5277,26 +5408,23 @@ local Library do
 			end
 
 			function Slider:Set(Value)
-				if Slider.Disabled then 
-					return 
+				if Slider.Disabled then
+					return
 				end
 
 				Slider.Value = Library:Round(MathClamp(Value, Slider.Min, Slider.Max), Slider.Decimals)
 				Library.Flags[Slider.Flag] = Slider.Value
 
-				local DisplayText = StringFormat("%s%s", Slider.Value, Slider.Suffix)
-				if Items["Value"].Instance.Text ~= DisplayText then
-					Items["Value"].Instance.Text = DisplayText
+				if not SliderFocused then
+					local DisplayText = StringFormat("%s%s", Slider.Value, Slider.Suffix)
+					if Items["Value"].Instance.Text ~= DisplayText then
+						Items["Value"].Instance.Text = DisplayText
+					end
 				end
-
-				defer(function()
-					local TextBounds = Items["Value"].Instance.TextBounds
-					Items["ValueBackground"].Instance.Size = UDim2New(0, math.max(30, TextBounds.X + 20), 0, 25)
-				end)
 
 				Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2New((Slider.Value - Slider.Min) / (Slider.Max - Slider.Min), 0, 1, 0)})
 
-				if Slider.Callback then 
+				if Slider.Callback then
 					Library:SafeCall(Slider.Callback, Slider.Value)
 				end
 
@@ -5436,7 +5564,7 @@ local Library do
 					Parent = Dropdown.Section.Items["Content"].Instance,
 					Name = "\0",
 					BackgroundTransparency = 1,
-					Size = UDim2New(1, 0, 0, Dropdown.Description ~= nil and Dropdown.Description ~= "" and 59 or 50),
+					Size = UDim2New(1, 0, 0, Dropdown.Description ~= nil and Dropdown.Description ~= "" and 59 or 43),
 					BorderColor3 = FromRGB(0, 0, 0),
 					ZIndex = 2,
 					BorderSizePixel = 0
@@ -5500,17 +5628,16 @@ local Library do
 				Items["Icon"] = Instances:Create("ImageLabel", {
 					Parent = Items["RealDropdown"].Instance,
 					Name = "\0",
-					ImageColor3 = Library.Theme["Accent"],
+					ImageColor3 = Library.Theme["Text"],
+					Image = "rbxassetid://126603363478667",
 					ScaleType = Enum.ScaleType.Fit,
-					BorderColor3 = FromRGB(0, 0, 0),
-					Size = UDim2New(0, 25, 0, 25),
-					AnchorPoint = Vector2New(1, 0.5),
-					Image = "rbxassetid://96215562143920",
+					AnchorPoint = Vector2New(0.5, 0.5),
+					Position = UDim2New(1, -13, 0.5, 0),
+					Size = UDim2New(0, 23, 0, 23),
 					BackgroundTransparency = 1,
-					Position = UDim2New(1, -1, 0.5, 0),
-					ZIndex = 2,
-					BorderSizePixel = 0
-				}):AddToTheme({ImageColor3 = 'Accent'})
+					BorderSizePixel = 0,
+					ZIndex = 2
+				})
 
 				Items["Text"] = Instances:Create("TextLabel", {
 					Parent = Items["Dropdown"].Instance,
@@ -5523,6 +5650,7 @@ local Library do
 					BackgroundTransparency = 1,
 					Size = UDim2New(0, 0, 0, 15),
 					BorderSizePixel = 0,
+					Position = UDim2New(0, 0, 0, 0),
 					ZIndex = 2,
 					TextSize = 14
 				}):AddToTheme({TextColor3 = 'Text'})     
@@ -5537,6 +5665,7 @@ local Library do
 						Position = UDim2New(0, 0, 0, 16),
 						Text = Dropdown.Description,
 						TextTransparency = 0.5,
+						TextXAlignment = Enum.TextXAlignment.Left,
 						AutomaticSize = Enum.AutomaticSize.X,
 						BackgroundTransparency = 1,
 						Size = UDim2New(0, 0, 0, 15),
@@ -5685,7 +5814,7 @@ local Library do
 			local Debounce = false
 			local RenderStepped
 
-			local function updateOptionHolderPosition()
+			local function UpdatePosition()
 				if not Library or not Items["OptionHolder"].Instance.Parent then return end
 				local S = (Library.Holder.Instance:FindFirstChildOfClass("UIScale") or {Scale = 1}).Scale
 				local btn = Items["RealDropdown"].Instance
@@ -5712,41 +5841,56 @@ local Library do
 			end
 
 			function Dropdown:SetOpen(Bool)
-				if Debounce then 
+				if Debounce then
 					return
 				end
 
 				Dropdown.IsOpen = Bool
 
-				Debounce = true 
+				Debounce = true
 
-				if Dropdown.IsOpen then 
+				if Dropdown.IsOpen then
+					Items["Icon"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						Rotation = 90,
+						ImageColor3 = Library.Theme["Accent"]
+					})
+				else
+					Items["Icon"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						Rotation = 0,
+						ImageColor3 = Library.Theme["Text"]
+					})
+				end
+
+				if Dropdown.IsOpen then
 					Items["OptionHolder"].Instance.Visible = true
 					Items["OptionHolder"].Instance.Parent = Library.Holder.Instance
 
-					updateOptionHolderPosition()
+					UpdatePosition()
 
 					RenderStepped = RunService.RenderStepped:Connect(function()
 						if not Library then return end
-						updateOptionHolderPosition()
+						UpdatePosition()
+						Library:HideOnOverlap(true, Items["OptionHolder"].Instance)
 					end)
 
-					for Index, Value in Library.OpenFrames do 
-						if Value ~= Dropdown then 
+					for Index, Value in Library.OpenFrames do
+						if Value ~= Dropdown then
 							Value:SetOpen(false)
 						end
 					end
 
-					Library.OpenFrames[Dropdown] = Dropdown 
+					Library.OpenFrames[Dropdown] = Dropdown
 				else
-					if Library.OpenFrames[Dropdown] then 
+					if Library.OpenFrames[Dropdown] then
 						Library.OpenFrames[Dropdown] = nil
 					end
 
-					if RenderStepped then 
+					if RenderStepped then
 						RenderStepped:Disconnect()
 						RenderStepped = nil
 					end
+
+					Library:HideOnOverlap(false, nil)
 				end
 
 				local Descendants = Items["OptionHolder"].Instance:GetDescendants()
@@ -5762,7 +5906,7 @@ local Library do
 					end
 
 					if not Value.ClassName:find("UI") then 
-						Value.ZIndex = Dropdown.IsOpen and 3 or 1
+						Value.ZIndex = Dropdown.IsOpen and 127 or 1
 					end
 
 					if type(TransparencyProperty) == "table" then 
@@ -5774,16 +5918,25 @@ local Library do
 					end
 				end
 
-				NewTween.Tween.Completed:Connect(function()
-					Debounce = false 
+				if not NewTween or not NewTween.Tween then
+					Debounce = false
 					Items["OptionHolder"].Instance.Visible = Dropdown.IsOpen
 					wait(0.2)
 					Items["OptionHolder"].Instance.Parent = not Dropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
+					Library:HideOnOverlap(Dropdown.IsOpen, Items["OptionHolder"].Instance)
+					return
+				end
+
+				NewTween.Tween.Completed:Connect(function()
+					Debounce = false
+					Items["OptionHolder"].Instance.Visible = Dropdown.IsOpen
+					wait(0.2)
+					Items["OptionHolder"].Instance.Parent = not Dropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
+					Library:HideOnOverlap(Dropdown.IsOpen, Items["OptionHolder"].Instance)
 				end)
 			end
 
 			function Dropdown:Set(Option)
-
 				if Option == nil then
 					return
 				end
@@ -6048,6 +6201,8 @@ local Library do
 				Dropdown:Set(Dropdown.Default)
 			end
 
+			Items["Icon"].Instance.Rotation = 0
+
 			Library.SetFlags[Dropdown.Flag] = function(Value)
 				Dropdown:Set(Value)
 			end
@@ -6079,7 +6234,7 @@ local Library do
 					Parent = Label.Section.Items["Content"].Instance,
 					Name = "\0",
 					BackgroundTransparency = 1,
-					Size = UDim2New(1, 0, 0, Label.Description ~= nil and Label.Description ~= "" and 28 or 20),
+					Size = UDim2New(1, 0, 0, Label.Description ~= nil and Label.Description ~= "" and 28 or 15),
 					BorderColor3 = FromRGB(0, 0, 0),
 					ZIndex = 2,
 					BorderSizePixel = 0
@@ -6098,7 +6253,7 @@ local Library do
 					AnchorPoint = Vector2New(0, 0),
 					Size = UDim2New(0, 0, 0, 15),
 					BackgroundTransparency = 1,
-					Position = UDim2New(0, 0, 0, 0),
+					Position = UDim2New(0, 0, 0, Label.Description ~= nil and Label.Description ~= "" and 0 or 0),
 					BorderSizePixel = 0,
 					ZIndex = 2,
 					TextSize = 14
@@ -6116,7 +6271,7 @@ local Library do
 						AnchorPoint = Vector2New(0, 0),
 						Size = UDim2New(0, 0, 0, 15),
 						BackgroundTransparency = 1,
-						Position = UDim2New(0, 0, 0, 14),
+						Position = UDim2New(0, 0, 0, 16),
 						BorderSizePixel = 0,
 						TextTransparency = 0.5,
 						ZIndex = 2,
@@ -6270,7 +6425,7 @@ local Library do
 					Parent = Textbox.Section.Items["Content"].Instance,
 					Name = "\0",
 					BackgroundTransparency = 1,
-					Size = UDim2New(1, 0, 0, Textbox.Description ~= nil and Textbox.Description ~= "" and 59 or 50),
+					Size = UDim2New(1, 0, 0, Textbox.Description ~= nil and Textbox.Description ~= "" and 60 or 40),
 					BorderColor3 = FromRGB(0, 0, 0),
 					ZIndex = 2,
 					BorderSizePixel = 0
@@ -6289,6 +6444,7 @@ local Library do
 					BackgroundTransparency = 1,
 					Size = UDim2New(0, 0, 0, 15),
 					BorderSizePixel = 0,
+					Position = UDim2New(0, 0, 0, 0),
 					ZIndex = 2,
 					TextSize = 14
 				}):AddToTheme({TextColor3 = 'Text'})
@@ -6365,6 +6521,12 @@ local Library do
 					Transparency = NumSequence{NumSequenceKeypoint(0, 0), NumSequenceKeypoint(0.676, 0), NumSequenceKeypoint(1, 1)}
 				})
 			end
+
+			Library.TextboxElements[Textbox] = {
+				Textbox = Items["Textbox"],
+				Background = Items["Background"],
+				Input = Items["Input"]
+			}
 
 			function Textbox:Get()
 				return Textbox.Value
