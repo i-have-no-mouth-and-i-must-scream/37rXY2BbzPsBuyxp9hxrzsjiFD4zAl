@@ -1353,7 +1353,7 @@ local Library do
 	end
 
 	Library.CheckForAutoLoad = function(self)
-		local ConfigContent = readfile(Library.Folders_Path.Directory .. "/autoload.json")
+		local ConfigContent = isfile(Library.Folders_Path.Directory .. "/autoload.json") and readfile(Library.Folders_Path.Directory .. "/autoload.json")
 
 		if ConfigContent == "" then
 			return
@@ -4270,137 +4270,127 @@ local Library do
 				Collapsed = true,
 			}
 
-			local Items = { } do
-				Items["Section"] = Instances:Create("Frame", {
-					Parent = Section.Page.ColumnsData[Section.Side].Instance,
-					Name = "\0",
-					BorderSizePixel = 0,
-					Size = UDim2New(1, 0, 0, 28),
-					BorderColor3 = FromRGB(0, 0, 0),
-					ZIndex = 2,
-					AutomaticSize = Enum.AutomaticSize.Y,
-					BackgroundColor3 = Library.Theme["Inline"]
-				}):AddToTheme({BackgroundColor3 = 'Inline'})
+			local Items = { }
 
-				Instances:Create("UICorner", {
-					Parent = Items["Section"].Instance,
-					Name = "\0",
-					CornerRadius = UDimNew(0, 5)
-				})
+			Items["Section"] = Instances:Create("Frame", {
+				Parent = Section.Page.ColumnsData[Section.Side].Instance,
+				Name = "\0",
+				BorderSizePixel = 0,
+				Size = UDim2New(1, 0, 0, 28),
+				BorderColor3 = FromRGB(0, 0, 0),
+				ZIndex = 2,
+				AutomaticSize = Enum.AutomaticSize.Y,
+				BackgroundColor3 = Library.Theme["Inline"]
+			}):AddToTheme({BackgroundColor3 = 'Inline'})
 
-				Instances:Create("UIGradient", {
-					Parent = Items["Section"].Instance,
-					Name = "\0"
-				})
+			Instances:Create("UICorner", {
+				Parent = Items["Section"].Instance,
+				Name = "\0",
+				CornerRadius = UDimNew(0, 5)
+			})
 
-				Items["Header"] = Instances:Create("TextButton", {
-					Parent = Items["Section"].Instance,
-					Name = "\0",
-					Size = UDim2New(1, 0, 0, 28),
-					Position = UDim2New(0, 0, 0, 0),
-					BackgroundTransparency = 1,
-					BorderSizePixel = 0,
-					Text = "",
-					AutoButtonColor = false,
-					ZIndex = 2
-				})
+			Instances:Create("UIGradient", {
+				Parent = Items["Section"].Instance,
+				Name = "\0"
+			})
 
-				Items["Text"] = Instances:Create("TextLabel", {
-					Parent = Items["Header"].Instance,
-					Name = "\0",
-					FontFace = Library.Font,
-					TextColor3 = Library.Theme["Text"],
-					BorderColor3 = FromRGB(0, 0, 0),
-					Text = Section.Name,
-					AutomaticSize = Enum.AutomaticSize.X,
-					Size = UDim2New(0, 0, 0, 15),
-					BackgroundTransparency = 1,
-					Position = UDim2New(0, 8, 0, 7),
-					BorderSizePixel = 0,
-					ZIndex = 2,
-					TextSize = 14
-				}):AddToTheme({TextColor3 = 'Text'})
+			Items["Header"] = Instances:Create("TextButton", {
+				Parent = Items["Section"].Instance,
+				Name = "\0",
+				Size = UDim2New(1, 0, 0, 28),
+				Position = UDim2New(0, 0, 0, 0),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Text = "",
+				AutoButtonColor = false,
+				ZIndex = 2
+			})
 
-				Items["Indicator"] = Instances:Create("ImageLabel", {
-					Parent = Items["Header"].Instance,
-					Name = "\0",
-					ImageColor3 = Library.Theme["Text"],
-					ScaleType = Enum.ScaleType.Fit,
-					BorderColor3 = FromRGB(0, 0, 0),
-					Size = UDim2New(0, 23, 0, 23),
-					AnchorPoint = Vector2New(0.5, 0.5),
-					Image = "rbxassetid://126603363478667",
-					BackgroundTransparency = 1,
-					Position = UDim2New(1, -15, 0.5, 0),
-					ZIndex = 2,
-					BorderSizePixel = 0
-				})
+			Items["Text"] = Instances:Create("TextLabel", {
+				Parent = Items["Header"].Instance,
+				Name = "\0",
+				FontFace = Library.Font,
+				TextColor3 = Library.Theme["Text"],
+				BorderColor3 = FromRGB(0, 0, 0),
+				Text = Section.Name,
+				AutomaticSize = Enum.AutomaticSize.X,
+				Size = UDim2New(0, 0, 0, 15),
+				BackgroundTransparency = 1,
+				Position = UDim2New(0, 8, 0, 7),
+				BorderSizePixel = 0,
+				ZIndex = 2,
+				TextSize = 14
+			}):AddToTheme({TextColor3 = 'Text'})
 
-				Instances:Create("UIGradient", {
-					Parent = Items["Indicator"].Instance,
-					Name = "\0",
-					Transparency = NumSequence{NumSequenceKeypoint(0, 0), NumSequenceKeypoint(1, 0)}
-				})
+			Items["Indicator"] = Instances:Create("ImageLabel", {
+				Parent = Items["Header"].Instance,
+				Name = "\0",
+				ImageColor3 = Library.Theme["Text"],
+				ScaleType = Enum.ScaleType.Fit,
+				BorderColor3 = FromRGB(0, 0, 0),
+				Size = UDim2New(0, 23, 0, 23),
+				AnchorPoint = Vector2New(0.5, 0.5),
+				Image = "rbxassetid://126603363478667",
+				BackgroundTransparency = 1,
+				Position = UDim2New(1, -15, 0.5, 0),
+				ZIndex = 2,
+				BorderSizePixel = 0
+			})
 
-				Items["Line"] = Instances:Create("Frame", {
-					Parent = Items["Section"].Instance,
-					Name = "\0",
-					Size = UDim2New(1, -16, 0, 1),
-					Position = UDim2New(0, 8, 0, 28),
-					BorderColor3 = FromRGB(0, 0, 0),
-					ZIndex = 2,
-					BorderSizePixel = 0,
-					BackgroundColor3 = Library.Theme["Border"]
-				}):AddToTheme({BackgroundColor3 = 'Border'})
+			Items["Line"] = Instances:Create("Frame", {
+				Parent = Items["Section"].Instance,
+				Name = "\0",
+				Size = UDim2New(1, -16, 0, 1),
+				Position = UDim2New(0, 8, 0, 28),
+				BorderColor3 = FromRGB(0, 0, 0),
+				ZIndex = 2,
+				BorderSizePixel = 0,
+				BackgroundColor3 = Library.Theme["Border"]
+			}):AddToTheme({BackgroundColor3 = 'Border'})
 
-				Items["ContentHolder"] = Instances:Create("Frame", {
-					Parent = Items["Section"].Instance,
-					Name = "\0",
-					ClipsDescendants = true,
-					BorderSizePixel = 0,
-					BorderColor3 = FromRGB(0, 0, 0),
-					BackgroundTransparency = 1,
-					Position = UDim2New(0, 8, 0, 32),
-					Size = UDim2New(1, -16, 0, 0),
-					ZIndex = 2
-				})
+			Items["ContentHolder"] = Instances:Create("Frame", {
+				Parent = Items["Section"].Instance,
+				Name = "\0",
+				ClipsDescendants = true,
+				BorderSizePixel = 0,
+				BorderColor3 = FromRGB(0, 0, 0),
+				BackgroundTransparency = 1,
+				Position = UDim2New(0, 8, 0, 32),
+				Size = UDim2New(1, -16, 0, 0),
+				ZIndex = 2
+			})
 
-				Items["Content"] = Instances:Create("Frame", {
-					Parent = Items["ContentHolder"].Instance,
-					Name = "\0",
-					BorderColor3 = FromRGB(0, 0, 0),
-					BorderSizePixel = 0,
-					BackgroundTransparency = 1,
-					Position = UDim2New(0, 0, 0, 0),
-					Size = UDim2New(1, 0, 0, 0),
-					ZIndex = 2,
-					AutomaticSize = Enum.AutomaticSize.Y
-				})
+			Items["Content"] = Instances:Create("Frame", {
+				Parent = Items["ContentHolder"].Instance,
+				Name = "\0",
+				BorderColor3 = FromRGB(0, 0, 0),
+				BorderSizePixel = 0,
+				BackgroundTransparency = 1,
+				Position = UDim2New(0, 0, 0, 0),
+				Size = UDim2New(1, 0, 0, 0),
+				ZIndex = 2,
+				AutomaticSize = Enum.AutomaticSize.Y
+			})
 
-				Instances:Create("UIListLayout", {
-					Parent = Items["Content"].Instance,
-					Name = "\0",
-					Padding = UDimNew(0, 6),
-					SortOrder = Enum.SortOrder.LayoutOrder
-				})
+			local ListLayout = Instances:Create("UIListLayout", {
+				Parent = Items["Content"].Instance,
+				Name = "\0",
+				Padding = UDimNew(0, 6),
+				SortOrder = Enum.SortOrder.LayoutOrder
+			})
 
-				Instances:Create("UIPadding", {
-					Parent = Items["Section"].Instance,
-					Name = "\0",
-					PaddingBottom = UDimNew(0, 13)
-				})
-
-				Items["Header"]:Connect("MouseButton1Down", function()
-					Section:SetCollapsed(not Section.Collapsed)
-				end)
-
-				Section.Items = Items
+			-- HÀM CẬP NHẬT CHIỀU CAO THỰC TẾ (Đây là chìa khóa 100%)
+			local function UpdateSize()
+				if not Section.Collapsed then
+					-- Lấy chiều cao từ UIListLayout (chính xác hơn AbsoluteSize của Frame)
+					local RealHeight = ListLayout.Instance.AbsoluteContentSize.Y
+					Items["ContentHolder"]:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						Size = UDim2New(1, -16, 0, RealHeight + 15) -- Bù thêm 15px an toàn
+					})
+				end
 			end
 
 			function Section:SetCollapsed(Bool)
-				if Section.Collapsed == Bool then
-					return
-				end
 				Section.Collapsed = Bool
 				Items["Line"].Instance.Visible = not Section.Collapsed
 
@@ -4409,44 +4399,34 @@ local Library do
 						Rotation = 0,
 						ImageColor3 = Library.Theme["Text"]
 					})
-				else
-					Items["Indicator"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						Rotation = 90,
-						ImageColor3 = Library.Theme["Accent"]
-					})
-				end
-
-				if Section.Collapsed then
 					Items["Content"].Instance.Visible = false
 					Items["ContentHolder"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 						Size = UDim2New(1, -16, 0, 0)
 					})
 				else
+					Items["Indicator"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						Rotation = 90,
+						ImageColor3 = Library.Theme["Accent"]
+					})
 					Items["Content"].Instance.Visible = true
-					defer(function()
-						local ContentHeight = Items["Content"].Instance.AbsoluteSize.Y
-						Items["ContentHolder"].Instance.Size = UDim2New(1, -16, 0, 0)
-						Items["ContentHolder"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-							Size = UDim2New(1, -16, 0, ContentHeight)
-						})
-					end)
+
+					-- Đợi layout ổn định rồi mới lấy size
+					task.delay(0.05, UpdateSize)
 				end
 			end
 
-			Items["ContentHolder"].Instance.Size = UDim2New(1, -16, 0, 0)
-			Items["Content"].Instance.Visible = false
-			Items["Line"].Instance.Visible = false
-			Section.Collapsed = true
-			Section:SetCollapsed(Section.DefaultCollapsed)
+			-- Theo dõi nếu có thêm item mới vào Section thì tự nở rộng ra thêm
+			ListLayout.Instance:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateSize)
 
-			if Section.Collapsed then
-				Items["Indicator"].Instance.Rotation = 0
-			else
-				Items["Indicator"].Instance.Rotation = 90
-			end
+			Items["Header"]:Connect("MouseButton1Down", function()
+				Section:SetCollapsed(not Section.Collapsed)
+			end)
 
-			TableInsert(Library.AllSections, Section)
+			Section.Items = Items
+			Section.Collapsed = Section.DefaultCollapsed
+			Section:SetCollapsed(Section.Collapsed)
 
+			table.insert(Library.AllSections, Section)
 			return setmetatable(Section, Library.Sections)
 		end
 
@@ -7165,7 +7145,7 @@ local Library do
 				})
 
 				MenuSetting_Section:Toggle({
-					Name = "Custom cursor",
+					Name = "Custom Cursor",
 					Flag = "Custom Cursor",
 					Description = "Enable/disable custom cursor",
 					Default = true,
