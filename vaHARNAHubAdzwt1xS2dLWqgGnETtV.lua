@@ -893,9 +893,9 @@ local Library do
 			return Font.new(getcustomasset(`{GetFolders().Assets}/{Name}.font`))
 		end
 
-		Library.Font = CustomFont:New("ProggyClean", 400, "Regular", {
-			Id = "ProggyClean",
-            Url = "https://github.com/LuckyHub1/LuckyHub/raw/main/ProggyClean.ttf"
+		Library.Font = CustomFont:New("Minecraftia", 400, "Regular", {
+			Id = "Minecraftia",
+            Url = "https://github.com/LuckyHub1/LuckyHub/raw/main/Minecraftia.ttf"
 		})
 	end
 
