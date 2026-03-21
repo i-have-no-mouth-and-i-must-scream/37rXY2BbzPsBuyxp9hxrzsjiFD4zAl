@@ -893,9 +893,9 @@ local Library do
 			return Font.new(getcustomasset(`{GetFolders().Assets}/{Name}.font`))
 		end
 
-		Library.Font = CustomFont:New("InterSemiBold", 400, "Regular", {
-			Id = "InterSemiBold",
-			Url = "https://github.com/sametexe001/luas/Text/refs/heads/main/fonts/InterSemibold.ttf"
+		Library.Font = CustomFont:New("ProggyClean", 400, "Regular", {
+			Id = "ProggyClean",
+            Url = "https://github.com/LuckyHub1/LuckyHub/raw/main/ProggyClean.ttf"
 		})
 	end
 
