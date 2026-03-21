@@ -3875,7 +3875,7 @@ local Library do
 					AutoButtonColor = false,
 					Name = "\0",
 					AnchorPoint = Vector2New(0, 1),
-					Position = UDim2New(0, 30, 1, -30),
+					Position = UDim2New(0, 30, 1, IsMobile and -120 or -30),
 					Size = UDim2New(0, 50, 0, 50),
 					ZIndex = 128,
 					BackgroundColor3 = Library.Theme['Background']
@@ -4618,7 +4618,7 @@ local Library do
 					Name = "\0",
 					BackgroundTransparency = 1,
 					BorderSizePixel = 0,
-					Size = UDim2New(1, 0, 0, Toggle.Description ~= nil and 28 or 20),
+					Size = UDim2New(1, 0, 0, Toggle.Description ~= nil and 28 or 18),
 					ZIndex = 2
 				})
 
@@ -7117,17 +7117,6 @@ local Library do
 					end
 				})
 
-				MenuSetting_Section:Dropdown({
-					Name = "UI Scale Preset",
-					Flag = "UI Scale Preset",
-					Description = "Select UI scale preset",
-					Default = "Medium",
-					Items = {"Very Small", "Small", "Medium", "Large", "Bigger", "Massive"},
-					Callback = function(Value)
-						Library:SetScaleNumeric(ScaleValues[Value])
-					end
-				})
-
 				MenuSetting_Section:Slider({
 					Name = "Menu Tween Time",
 					Flag = "Menu Tween Time",
@@ -7151,6 +7140,17 @@ local Library do
 					Decimals = 0.01,
 					Callback = function(Value)
 						Library.FadeSpeed = Value
+					end
+				})
+
+				MenuSetting_Section:Dropdown({
+					Name = "Menu Scale Preset",
+					Flag = "Menu Scale Preset",
+					Description = "Select Menu scale preset",
+					Default = IsMobile and "Bigger" or "Medium",
+					Items = {"Very Small", "Small", "Medium", "Large", "Bigger", "Massive"},
+					Callback = function(Value)
+						Library:SetScaleNumeric(ScaleValues[Value])
 					end
 				})
 
