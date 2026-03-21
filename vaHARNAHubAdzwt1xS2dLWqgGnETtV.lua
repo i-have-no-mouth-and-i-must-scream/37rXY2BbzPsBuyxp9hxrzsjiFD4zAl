@@ -4618,7 +4618,7 @@ local Library do
 					Name = "\0",
 					BackgroundTransparency = 1,
 					BorderSizePixel = 0,
-					Size = UDim2New(1, 0, 0, description ~= nil and description ~= "" and 28 or 17),
+					Size = UDim2New(1, 0, 0, Toggle.Description ~= nil and 28 or 20),
 					ZIndex = 2
 				})
 
@@ -4642,7 +4642,7 @@ local Library do
 					TextSize = 14
 				}):AddToTheme({TextColor3 = 'Text'})
 
-				if description ~= nil and description ~= "" then
+				if Toggle.Description ~= nil then
 					Items["Description"] = Instances:Create("TextLabel", {
 						Parent = Items["Toggle"].Instance,
 						Name = "\0",
