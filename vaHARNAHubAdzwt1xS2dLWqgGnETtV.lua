@@ -58,6 +58,8 @@ local Library do
 	local delay = task.delay
 	local defer = task.defer
 
+	local cloneref = cloneref or function(o) return o end
+
 	local CoreGui = cloneref(game:GetService("CoreGui"))
 	local TweenService = cloneref(game:GetService("TweenService"))
 	local UserInputService = cloneref(game:GetService("UserInputService"))
@@ -66,8 +68,20 @@ local Library do
 	local HttpService = cloneref(game:GetService("HttpService"))
 	local RunService = cloneref(game:GetService("RunService"))
 
-	gethui = gethui or function()
-		return CoreGui
+	local GetHui = gethui or function()
+		local Success, Result = pcall(function()
+			local CoreGui = game:GetService("CoreGui")
+			return CoreGui
+		end)
+		return Success and Result or nil
+	end
+
+	local function SafeGetHui()
+		local Success, Result = pcall(GetHui)
+		if Success and Result then
+			return Result
+		end
+		return game:GetService("CoreGui")
 	end
 
 	local LocalPlayer = Players.LocalPlayer
@@ -478,19 +492,34 @@ local Library do
 		Instances.__index = Instances
 
 		Instances.Create = function(self, Class, Properties)
-			local NewItem = {
-				Instance = InstanceNew(Class),
-				Properties = Properties,
-				Class = Class
-			}
+			local Success, Result = pcall(function()
+				local NewItem = {
+					Instance = InstanceNew(Class),
+					Properties = Properties,
+					Class = Class
+				}
 
-			setmetatable(NewItem, Instances)
+				setmetatable(NewItem, Instances)
 
-			for Property, Value in NewItem.Properties do
-				NewItem.Instance[Property] = Value
+				for Property, Value in pairs(NewItem.Properties) do
+					local PropSuccess = pcall(function()
+						NewItem.Instance[Property] = Value
+					end)
+				end
+
+				return NewItem
+			end)
+			
+			if Success and Result then
+				return Result
 			end
-
-			return NewItem
+			
+			return {
+				Instance = nil,
+				Properties = Properties or {},
+				Class = Class,
+				_Protected = true
+			}
 		end
 
 		Instances.AddToTheme = function(self, Properties)
@@ -871,41 +900,102 @@ local Library do
 		end
 	end
 
+	local DefaultFont = Enum.Font.GothamBold
+
 	local CustomFont = { } do
 		function CustomFont:New(Name, Weight, Style, Data)
-			if not isfile(Data.Id) then 
-				writefile(Data.Id, game:HttpGet(Data.Url))
+			local FontFallback = function()
+				return Font.new(DefaultFont)
 			end
+			
+			local Success, Result = pcall(function()
+				local AssetFolder = GetFolders().Assets
+				
+				if not isfolder(AssetFolder) then
+					makefolder(AssetFolder)
+				end
 
-			local Data = {
-				name = Name,
-				faces = {
-					{
-						name = Name,
-						weight = Weight,
-						style = Style,
-						assetId = getcustomasset(Data.Id)
+				if not isfile(Data.Id) then 
+					local Response = HttpService:GetAsync(Data.Url)
+					if Response and Response ~= "" then
+						writefile(Data.Id, Response)
+					end
+				end
+
+				if not isfile(Data.Id) then
+					return nil
+				end
+
+				local FontAssetId = getcustomasset(Data.Id)
+				
+				if not FontAssetId then
+					return nil
+				end
+
+				local FontJson = {
+					name = Name,
+					faces = {
+						{
+							name = Name,
+							weight = Weight,
+							style = Style,
+							assetId = FontAssetId
+						}
 					}
 				}
-			}
 
-			writefile(`{GetFolders().Assets}/{Name}.font`, HttpService:JSONEncode(Data))
-			return Font.new(getcustomasset(`{GetFolders().Assets}/{Name}.font`))
+				local FontFilePath = AssetFolder .. "/" .. Name .. ".font"
+				writefile(FontFilePath, HttpService:JSONEncode(FontJson))
+				
+				local FontAssetPath = getcustomasset(FontFilePath)
+				
+				if not FontAssetPath then
+					return nil
+				end
+				
+				return Font.new(FontAssetPath)
+			end)
+			
+			if Success and Result then
+				return Result
+			end
+			
+			return FontFallback()
 		end
 
-		Library.Font = CustomFont:New("InterSemibold", 400, "Regular", {
+		local FontSuccess, LoadedFont = pcall(CustomFont.New, CustomFont, "InterSemibold", 400, "Regular", {
 			Id = "InterSemibold",
             Url = "https://github.com/sametexe001/luas/Text/refs/heads/main/fonts/InterSemibold.ttf"
 		})
+		
+		Library.Font = FontSuccess and LoadedFont or Font.new(DefaultFont)
 	end
 
 	Library.Holder = Instances:Create("ScreenGui", {
-		Parent = gethui(),
+		Parent = SafeGetHui(),
 		Name = "\0",
 		ZIndexBehavior = Enum.ZIndexBehavior.Global,
 		DisplayOrder = 2,
 		ResetOnSpawn = false
 	})
+
+	if not Library.Holder.Instance then
+		local ScreenGuiSuccess, ScreenGui = pcall(function()
+			return Instance.new("ScreenGui")
+		end)
+		if ScreenGuiSuccess then
+			Library.Holder = {
+				Instance = ScreenGui,
+				Properties = {},
+				Class = "ScreenGui"
+			}
+			Library.Holder.Instance.Parent = SafeGetHui()
+			Library.Holder.Instance.Name = "solixhub"
+			Library.Holder.Instance.ZIndexBehavior = Enum.ZIndexBehavior.Global
+			Library.Holder.Instance.DisplayOrder = 2
+			Library.Holder.Instance.ResetOnSpawn = false
+		end
+	end
 
 	wait()
 
@@ -991,7 +1081,7 @@ local Library do
 	end)
 
 	Library.OtherHolder = Instances:Create("ScreenGui", {
-		Parent = gethui(),
+		Parent = SafeGetHui(),
 		Name = "\0",
 		ZIndexBehavior = Enum.ZIndexBehavior.Global,
 		DisplayOrder = 2,
@@ -999,7 +1089,7 @@ local Library do
 	})
 
 	Library.FloatingButtonHolder = Instances:Create("ScreenGui", {
-		Parent = gethui(),
+		Parent = SafeGetHui(),
 		Name = "FloatingButtonHolder\0",
 		ZIndexBehavior = Enum.ZIndexBehavior.Global,
 		DisplayOrder = 3,
@@ -1007,7 +1097,7 @@ local Library do
 	})
 
 	Library.UnusedHolder = Instances:Create("ScreenGui", {
-		Parent = gethui(),
+		Parent = SafeGetHui(),
 		Name = "\0",
 		ZIndexBehavior = Enum.ZIndexBehavior.Global,
 		Enabled = false,
