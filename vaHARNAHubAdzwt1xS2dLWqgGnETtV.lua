@@ -963,8 +963,8 @@ local Library do
 			return FontFallback()
 		end
 
-		local FontSuccess, LoadedFont = pcall(CustomFont.New, CustomFont, "InterSemibold", 400, "Regular", {
-			Id = "InterSemibold",
+		local FontSuccess, LoadedFont = pcall(CustomFont.New, CustomFont, "InterSemiBold", 400, "Regular", {
+			Id = "InterSemiBold",
             Url = "https://github.com/sametexe001/luas/Text/refs/heads/main/fonts/InterSemibold.ttf"
 		})
 		
