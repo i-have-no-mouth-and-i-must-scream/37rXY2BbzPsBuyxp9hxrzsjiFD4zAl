@@ -2249,8 +2249,6 @@ local Library do
 						RenderStepped:Disconnect()
 						RenderStepped = nil
 					end
-
-					Library:HideOnOverlap(false, nil)
 				end
 
 				local Descendants = Items["OptionHolder"].Instance:GetDescendants()
@@ -4692,9 +4690,7 @@ local Library do
 				if TargetHeight == CurrentHeight then return end
 				CurrentHeight = TargetHeight
 
-				local TweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-				Items["ContentHolder"]:Tween(TweenInfo, {
+				Items["ContentHolder"]:Tween(TweenInfo.new(Library.FadeSpeed, Library.Tween.Style, Library.Tween.Direction), {
 					Size = UDim2New(1, -16, 0, TargetHeight)
 				})
 			end
@@ -4704,23 +4700,24 @@ local Library do
 				Items["Line"].Instance.Visible = not Section.Collapsed
 
 				if Section.Collapsed then
-					Items["Indicator"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					Items["Indicator"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
 						Rotation = 0,
 						ImageColor3 = Library.Theme["Text"]
 					})
 					Items["Content"].Instance.Visible = false
-					Items["ContentHolder"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					Items["ContentHolder"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
 						Size = UDim2New(1, -16, 0, 0)
 					})
 				else
-					Items["Indicator"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					Items["Indicator"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
 						Rotation = 90,
 						ImageColor3 = Library.Theme["Accent"]
 					})
 					wait()
 					Items["Content"].Instance.Visible = true
-					CurrentHeight = 0 
-					UpdateSize()
+					Items["ContentHolder"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
+						Size = UDim2New(1, -16, 0, Items["Content"].Instance.AbsoluteSize.Y)
+					})
 				end
 			end
 
@@ -6031,12 +6028,12 @@ local Library do
 
 				if Dropdown.IsOpen then
 					wait()
-					Base.Items["Icon"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					Base.Items["Icon"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
 						Rotation = 90,
 						ImageColor3 = Library.Theme["Accent"]
 					})
 				else
-					Base.Items["Icon"]:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					Base.Items["Icon"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
 						Rotation = 0,
 						ImageColor3 = Library.Theme["Text"]
 					})
@@ -6051,7 +6048,6 @@ local Library do
 					RenderStepped = RunService.RenderStepped:Connect(function()
 						if not Library then return end
 						UpdatePosition()
-						Library:HideOnOverlap(true, Base.Items["OptionHolder"].Instance)
 					end)
 
 					for Index, Value in Library.OpenFrames do
@@ -6070,8 +6066,6 @@ local Library do
 						RenderStepped:Disconnect()
 						RenderStepped = nil
 					end
-
-					Library:HideOnOverlap(false, nil)
 				end
 
 				local Descendants = Base.Items["OptionHolder"].Instance:GetDescendants()
@@ -6105,7 +6099,6 @@ local Library do
 					Base.Items["OptionHolder"].Instance.Visible = Dropdown.IsOpen
 					wait(0.2)
 					Base.Items["OptionHolder"].Instance.Parent = not Dropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
-					Library:HideOnOverlap(Dropdown.IsOpen, Base.Items["OptionHolder"].Instance)
 					return
 				end
 
@@ -6115,7 +6108,6 @@ local Library do
 					Base.Items["OptionHolder"].Instance.Visible = Dropdown.IsOpen
 					wait(0.2)
 					Base.Items["OptionHolder"].Instance.Parent = not Dropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
-					Library:HideOnOverlap(Dropdown.IsOpen, Base.Items["OptionHolder"].Instance)
 				end)
 			end
 
