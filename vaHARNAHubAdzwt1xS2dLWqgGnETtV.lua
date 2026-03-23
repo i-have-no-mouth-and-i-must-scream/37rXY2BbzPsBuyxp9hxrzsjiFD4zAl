@@ -902,10 +902,37 @@ local Library do
 
 	local DefaultFont = Enum.Font.GothamBold
 
+	local FontClass = Font
+
+	if FontClass == nil and type(getgenv) == "function" then
+		local g = getgenv()
+		if type(g) == "table" and g.Font ~= nil then
+			FontClass = g.Font
+		end
+	end
+
+	if FontClass == nil and type(getrenv) == "function" then
+		local r = getrenv()
+		if type(r) == "table" and r.Font ~= nil then
+			FontClass = r.Font
+		end
+	end
+
+	local function SafeFont(...)
+		if FontClass == nil then
+			return nil
+		end
+		local ok, res = pcall(function(...)
+			return FontClass.new(...)
+		end, ...)
+		return ok and res or nil
+	end
+
 	local CustomFont = { } do
+
 		function CustomFont:New(Name, Weight, Style, Data)
 			local FontFallback = function()
-				return Font.new(DefaultFont)
+				return SafeFont(DefaultFont)
 			end
 
 			local Success, Result = pcall(function()
@@ -968,7 +995,13 @@ local Library do
 			Url = "https://github.com/sametexe001/luas/Text/refs/heads/main/fonts/InterSemibold.ttf"
 		})
 
-		Library.Font = FontSuccess and LoadedFont or Font.new(DefaultFont)
+		local resolved = FontSuccess and LoadedFont
+
+		if not resolved then
+			resolved = SafeFont(DefaultFont)
+		end
+
+		Library.Font = resolved or DefaultFont
 	end
 
 	Library.Holder = Instances:Create("ScreenGui", {
