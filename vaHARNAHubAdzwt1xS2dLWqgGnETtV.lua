@@ -1523,7 +1523,13 @@ local Library do
 	end
 
 	Library.CheckForAutoLoad = function(self)
-		local ConfigContent = readfile(Library.Folders_Path.Directory .. "/autoload.json")
+		local AutoLoadPath = Library.Folders_Path.Directory .. "/autoload.json"
+
+		if not isfile(AutoLoadPath) then
+			return
+		end
+
+		local ConfigContent = readfile(AutoLoadPath)
 
 		if ConfigContent == "" then
 			return
