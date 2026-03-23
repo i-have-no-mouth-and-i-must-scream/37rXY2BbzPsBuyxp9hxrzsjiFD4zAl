@@ -68,19 +68,22 @@ local Library do
 	local HttpService = cloneref(game:GetService("HttpService"))
 	local RunService = cloneref(game:GetService("RunService"))
 
-	local GetHui = gethui or function()
+	local GetUI = gethui or function()
 		local Success, Result = pcall(function()
 			local CoreGui = game:GetService("CoreGui")
 			return CoreGui
 		end)
+
 		return Success and Result or nil
 	end
 
-	local function SafeGetHui()
-		local Success, Result = pcall(GetHui)
+	local function SafeGetUI()
+		local Success, Result = pcall(GetUI)
+
 		if Success and Result then
 			return Result
 		end
+
 		return game:GetService("CoreGui")
 	end
 
@@ -906,6 +909,7 @@ local Library do
 
 	if FontClass == nil and type(getgenv) == "function" then
 		local g = getgenv()
+
 		if type(g) == "table" and g.Font ~= nil then
 			FontClass = g.Font
 		end
@@ -913,6 +917,7 @@ local Library do
 
 	if FontClass == nil and type(getrenv) == "function" then
 		local r = getrenv()
+
 		if type(r) == "table" and r.Font ~= nil then
 			FontClass = r.Font
 		end
@@ -922,10 +927,12 @@ local Library do
 		if FontClass == nil then
 			return nil
 		end
-		local ok, res = pcall(function(...)
+
+		local Result, Result = pcall(function(...)
 			return FontClass.new(...)
 		end, ...)
-		return ok and res or nil
+
+		return Result and Result or nil
 	end
 
 	local CustomFont = { } do
@@ -944,6 +951,7 @@ local Library do
 
 				if not isfile(Data.Id) then 
 					local Response = HttpService:GetAsync(Data.Url)
+
 					if Response and Response ~= "" then
 						writefile(Data.Id, Response)
 					end
@@ -980,7 +988,7 @@ local Library do
 					return nil
 				end
 
-				return Font.new(FontAssetPath)
+				return SafeFont(FontAssetPath)
 			end)
 
 			if Success and Result then
@@ -995,17 +1003,17 @@ local Library do
 			Url = "https://github.com/sametexe001/luas/Text/refs/heads/main/fonts/InterSemibold.ttf"
 		})
 
-		local resolved = FontSuccess and LoadedFont
+		local Resolved = FontSuccess and LoadedFont
 
-		if not resolved then
-			resolved = SafeFont(DefaultFont)
+		if not Resolved then
+			Resolved = SafeFont(DefaultFont)
 		end
 
-		Library.Font = resolved or DefaultFont
+		Library.Font = Resolved or DefaultFont
 	end
 
 	Library.Holder = Instances:Create("ScreenGui", {
-		Parent = SafeGetHui(),
+		Parent = SafeGetUI(),
 		Name = "\0",
 		ZIndexBehavior = Enum.ZIndexBehavior.Global,
 		DisplayOrder = 2,
@@ -1013,17 +1021,19 @@ local Library do
 	})
 
 	if not Library.Holder.Instance then
-		local ScreenGuiSuccess, ScreenGui = pcall(function()
+		local Success, Result = pcall(function()
 			return Instance.new("ScreenGui")
 		end)
-		if ScreenGuiSuccess then
+
+		if Success then
 			Library.Holder = {
-				Instance = ScreenGui,
+				Instance = Result,
 				Properties = {},
 				Class = "ScreenGui"
 			}
-			Library.Holder.Instance.Parent = SafeGetHui()
-			Library.Holder.Instance.Name = "solixhub"
+
+			Library.Holder.Instance.Parent = SafeGetUI()
+			Library.Holder.Instance.Name = "\0"
 			Library.Holder.Instance.ZIndexBehavior = Enum.ZIndexBehavior.Global
 			Library.Holder.Instance.DisplayOrder = 2
 			Library.Holder.Instance.ResetOnSpawn = false
@@ -1042,9 +1052,10 @@ local Library do
 	Library.UIScaleScreenPercent = 2.3 / 3
 	Library.UIScaleObject = Instances:Create("UIScale", {
 		Parent = Library.Holder.Instance,
-		Name = "UIScale",
+		Name = "\0",
 		Scale = 1
 	})
+	
 	Library.UIScaleNum = 1
 
 	function Library:SetScaleFromScreenPercent(Percent)
@@ -1114,7 +1125,7 @@ local Library do
 	end)
 
 	Library.OtherHolder = Instances:Create("ScreenGui", {
-		Parent = SafeGetHui(),
+		Parent = SafeGetUI(),
 		Name = "\0",
 		ZIndexBehavior = Enum.ZIndexBehavior.Global,
 		DisplayOrder = 2,
@@ -1122,15 +1133,15 @@ local Library do
 	})
 
 	Library.FloatingButtonHolder = Instances:Create("ScreenGui", {
-		Parent = SafeGetHui(),
-		Name = "FloatingButtonHolder\0",
+		Parent = SafeGetUI(),
+		Name = "\0",
 		ZIndexBehavior = Enum.ZIndexBehavior.Global,
 		DisplayOrder = 3,
 		ResetOnSpawn = false
 	})
 
 	Library.UnusedHolder = Instances:Create("ScreenGui", {
-		Parent = SafeGetHui(),
+		Parent = SafeGetUI(),
 		Name = "\0",
 		ZIndexBehavior = Enum.ZIndexBehavior.Global,
 		Enabled = false,
