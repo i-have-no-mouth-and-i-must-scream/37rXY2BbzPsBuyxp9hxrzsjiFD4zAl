@@ -1,4 +1,3 @@
-
 if not LPH_OBFUSCATED then
 	LPH_JIT_MAX = function(...) return ... end
 	LPH_NO_VIRTUALIZE = function(f) return f end
@@ -504,21 +503,17 @@ local Library do
 
 				for Property, Value in pairs(NewItem.Properties) do
 					local PropSuccess = pcall(function()
-						if Property == "FontFace" and typeof(Value) == "EnumItem" and Value.EnumType == Enum.Font then
-							NewItem.Instance.Font = Value
-						else
-							NewItem.Instance[Property] = Value
-						end
+						NewItem.Instance[Property] = Value
 					end)
 				end
 
 				return NewItem
 			end)
-			
+
 			if Success and Result then
 				return Result
 			end
-			
+
 			return {
 				Instance = nil,
 				Properties = Properties or {},
@@ -907,40 +902,15 @@ local Library do
 
 	local DefaultFont = Enum.Font.GothamBold
 
-	-- Some executors omit the global `Font` table; guard all Font.new usage.
-	local FontClass = Font
-	if FontClass == nil and type(getgenv) == "function" then
-		local g = getgenv()
-		if type(g) == "table" and g.Font ~= nil then
-			FontClass = g.Font
-		end
-	end
-	if FontClass == nil and type(getrenv) == "function" then
-		local r = getrenv()
-		if type(r) == "table" and r.Font ~= nil then
-			FontClass = r.Font
-		end
-	end
-
-	local function safeFontNew(...)
-		if FontClass == nil then
-			return nil
-		end
-		local ok, res = pcall(function(...)
-			return FontClass.new(...)
-		end, ...)
-		return ok and res or nil
-	end
-
 	local CustomFont = { } do
 		function CustomFont:New(Name, Weight, Style, Data)
 			local FontFallback = function()
-				return safeFontNew(DefaultFont)
+				return Font.new(DefaultFont)
 			end
-			
+
 			local Success, Result = pcall(function()
 				local AssetFolder = GetFolders().Assets
-				
+
 				if not isfolder(AssetFolder) then
 					makefolder(AssetFolder)
 				end
@@ -957,7 +927,7 @@ local Library do
 				end
 
 				local FontAssetId = getcustomasset(Data.Id)
-				
+
 				if not FontAssetId then
 					return nil
 				end
@@ -976,33 +946,29 @@ local Library do
 
 				local FontFilePath = AssetFolder .. "/" .. Name .. ".font"
 				writefile(FontFilePath, HttpService:JSONEncode(FontJson))
-				
+
 				local FontAssetPath = getcustomasset(FontFilePath)
-				
+
 				if not FontAssetPath then
 					return nil
 				end
-				
-				return safeFontNew(FontAssetPath)
+
+				return Font.new(FontAssetPath)
 			end)
-			
+
 			if Success and Result then
 				return Result
 			end
-			
+
 			return FontFallback()
 		end
 
-		local FontSuccess, LoadedFont = pcall(CustomFont.New, CustomFont, "InterSemiBold", 400, "Regular", {
-			Id = "InterSemiBold",
-            Url = "https://github.com/sametexe001/luas/raw/refs/heads/main/fonts/InterSemibold.ttf"
+		local FontSuccess, LoadedFont = pcall(CustomFont.New, CustomFont, "InterSemibold", 400, "Regular", {
+			Id = "InterSemibold",
+			Url = "https://github.com/sametexe001/luas/Text/refs/heads/main/fonts/InterSemibold.ttf"
 		})
-		
-		local resolved = FontSuccess and LoadedFont
-		if not resolved then
-			resolved = safeFontNew(DefaultFont)
-		end
-		Library.Font = resolved or DefaultFont
+
+		Library.Font = FontSuccess and LoadedFont or Font.new(DefaultFont)
 	end
 
 	Library.Holder = Instances:Create("ScreenGui", {
@@ -1593,8 +1559,11 @@ local Library do
 					TextColor3 = Library.Theme["Text"],
 					TextTransparency = 0.4000000059604645,
 					Text = name,
-					AutomaticSize = Enum.AutomaticSize.X,
-					Size = UDim2New(0, 0, 0, 15),
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextYAlignment = Enum.TextYAlignment.Center,
+					TextWrapped = true,
+					AutomaticSize = Enum.AutomaticSize.Y,
+					Size = UDim2New(1, 0, 0, 0),
 					LayoutOrder = 0,
 					BorderSizePixel = 0,
 					BackgroundTransparency = 1,
@@ -1612,8 +1581,11 @@ local Library do
 					TextColor3 = Library.Theme["Text"],
 					TextTransparency = 0.5,
 					Text = description,
-					AutomaticSize = Enum.AutomaticSize.X,
-					Size = UDim2New(0, 0, 0, 12),
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextYAlignment = Enum.TextYAlignment.Center,
+					TextWrapped = true,
+					AutomaticSize = Enum.AutomaticSize.Y,
+					Size = UDim2New(1, 0, 0, 0),
 					LayoutOrder = 1,
 					BorderSizePixel = 0,
 					BackgroundTransparency = 1,
@@ -1703,9 +1675,8 @@ local Library do
 					BorderColor3 = FromRGB(0, 0, 0),
 					Text = "",
 					AutoButtonColor = false,
-					AnchorPoint = Vector2New(1, 0),
 					BorderSizePixel = 0,
-					Position = UDim2New(1, 0, 0, 0),
+					Position = UDim2New(0, 0, 0, 0),
 					Size = UDim2New(0, 15, 0, 15),
 					ZIndex = 2,
 					TextSize = 14,
@@ -4742,7 +4713,8 @@ local Library do
 					Name = "\0",
 					BackgroundTransparency = 1,
 					BorderSizePixel = 0,
-					Size = UDim2New(1, 0, 0, Toggle.Description ~= nil and 28 or 18),
+					Size = UDim2New(1, 0, 0, 0),
+					AutomaticSize = Enum.AutomaticSize.Y,
 					ZIndex = 2
 				})
 
@@ -4755,8 +4727,11 @@ local Library do
 					TextColor3 = Library.Theme["Text"],
 					TextTransparency = 0.4000000059604645,
 					Text = Toggle.Name,
-					AutomaticSize = Enum.AutomaticSize.X,
-					Size = UDim2New(0, 0, 0, 15),
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextYAlignment = Enum.TextYAlignment.Center,
+					TextWrapped = true,
+					AutomaticSize = Enum.AutomaticSize.Y,
+					Size = UDim2New(1, -96, 0, 0),
 					AnchorPoint = Vector2New(0, 0),
 					BorderSizePixel = 0,
 					BackgroundTransparency = 1,
@@ -4774,8 +4749,11 @@ local Library do
 						TextColor3 = Library.Theme["Text"],
 						TextTransparency = 0.5,
 						Text = Toggle.Description,
-						AutomaticSize = Enum.AutomaticSize.X,
-						Size = UDim2New(0, 0, 0, 15),
+						TextXAlignment = Enum.TextXAlignment.Left,
+						TextYAlignment = Enum.TextYAlignment.Top,
+						TextWrapped = true,
+						AutomaticSize = Enum.AutomaticSize.Y,
+						Size = UDim2New(1, -96, 0, 0),
 						AnchorPoint = Vector2New(0, 0),
 						BorderSizePixel = 0,
 						BackgroundTransparency = 1,
@@ -4797,7 +4775,8 @@ local Library do
 					Size = UDim2New(0, 40, 0, 20),
 					ZIndex = 2,
 					BorderSizePixel = 0,
-					BackgroundColor3 = Library.Theme["Element"]
+					BackgroundColor3 = Library.Theme["Element"],
+					LayoutOrder = 2
 				}):AddToTheme({BackgroundColor3 = 'Element'})
 
 				Instances:Create("UICorner", {
@@ -4838,7 +4817,8 @@ local Library do
 					BackgroundTransparency = 1,
 					Position = UDim2New(1, -48, 0, 0),
 					Size = UDim2New(0, 0, 1, 0),
-					BorderSizePixel = 0
+					BorderSizePixel = 0,
+					LayoutOrder = 1
 				})
 
 				Instances:Create("UIListLayout", {
@@ -6384,12 +6364,13 @@ local Library do
 				HasSubElements = false,
 			}
 
-			local Items = { } do 
+			local Items = { } do
 				Items["Label"] = Instances:Create("Frame", {
 					Parent = Label.Section.Items["Content"].Instance,
 					Name = "\0",
 					BackgroundTransparency = 1,
-					Size = UDim2New(1, 0, 0, Label.Description ~= nil and Label.Description ~= "" and 30 or 17),
+					Size = UDim2New(1, 0, 0, 0),
+					AutomaticSize = Enum.AutomaticSize.Y,
 					BorderColor3 = FromRGB(0, 0, 0),
 					ZIndex = 2,
 					BorderSizePixel = 0
@@ -6397,52 +6378,113 @@ local Library do
 
 				Items["Label"]:Tooltip(Tooltip)
 
-				Items["Text"] = Instances:Create("TextLabel", {
+				Instances:Create("UIListLayout", {
 					Parent = Items["Label"].Instance,
+					Name = "\0",
+					VerticalAlignment = Enum.VerticalAlignment.Top,
+					HorizontalAlignment = Enum.HorizontalAlignment.Left,
+					FillDirection = Enum.FillDirection.Vertical,
+					Padding = UDimNew(0, 0),
+					SortOrder = Enum.SortOrder.LayoutOrder
+				})
+
+				Items["MainRow"] = Instances:Create("Frame", {
+					Parent = Items["Label"].Instance,
+					Name = "\0",
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					Size = UDim2New(1, 0, 0, 0),
+					AutomaticSize = Enum.AutomaticSize.Y,
+					ZIndex = 2,
+					LayoutOrder = 0
+				})
+
+				Instances:Create("UIListLayout", {
+					Parent = Items["MainRow"].Instance,
+					Name = "\0",
+					VerticalAlignment = Enum.VerticalAlignment.Center,
+					HorizontalAlignment = Enum.HorizontalAlignment.Left,
+					FillDirection = Enum.FillDirection.Horizontal,
+					Padding = UDimNew(0, 0),
+					SortOrder = Enum.SortOrder.LayoutOrder
+				})
+
+				Items["TextContainer"] = Instances:Create("Frame", {
+					Parent = Items["MainRow"].Instance,
+					Name = "\0",
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					Size = UDim2New(1, 0, 0, 0),
+					AutomaticSize = Enum.AutomaticSize.Y,
+					ZIndex = 2,
+					LayoutOrder = 0
+				})
+
+				Instances:Create("UIListLayout", {
+					Parent = Items["TextContainer"].Instance,
+					Name = "\0",
+					VerticalAlignment = Enum.VerticalAlignment.Top,
+					HorizontalAlignment = Enum.HorizontalAlignment.Left,
+					FillDirection = Enum.FillDirection.Vertical,
+					Padding = UDimNew(0, 0),
+					SortOrder = Enum.SortOrder.LayoutOrder
+				})
+
+				Items["Text"] = Instances:Create("TextLabel", {
+					Parent = Items["TextContainer"].Instance,
 					Name = "\0",
 					FontFace = Library.Font,
 					TextColor3 = Library.Theme["Text"],
 					BorderColor3 = FromRGB(0, 0, 0),
 					Text = Label.Name,
-					AutomaticSize = Enum.AutomaticSize.X,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextYAlignment = Enum.TextYAlignment.Center,
+					TextWrapped = true,
+					AutomaticSize = Enum.AutomaticSize.Y,
+					Size = UDim2New(1, 0, 0, 0),
 					AnchorPoint = Vector2New(0, 0),
-					Size = UDim2New(0, 0, 0, 15),
 					BackgroundTransparency = 1,
 					Position = UDim2New(0, 0, 0, 0),
 					BorderSizePixel = 0,
 					ZIndex = 2,
-					TextSize = 14
+					TextSize = 14,
+					LayoutOrder = 0
 				}):AddToTheme({TextColor3 = 'Text'})
 
 				if Label.Description ~= nil and Label.Description ~= "" then
 					Items["Description"] = Instances:Create("TextLabel", {
-						Parent = Items["Label"].Instance,
+						Parent = Items["TextContainer"].Instance,
 						Name = "\0",
 						FontFace = Library.Font,
 						TextColor3 = Library.Theme["Text"],
 						BorderColor3 = FromRGB(0, 0, 0),
 						Text = Label.Description,
-						AutomaticSize = Enum.AutomaticSize.X,
+						TextXAlignment = Enum.TextXAlignment.Left,
+						TextYAlignment = Enum.TextYAlignment.Top,
+						TextWrapped = true,
+						AutomaticSize = Enum.AutomaticSize.Y,
+						Size = UDim2New(1, 0, 0, 0),
 						AnchorPoint = Vector2New(0, 0),
-						Size = UDim2New(0, 0, 0, 15),
 						BackgroundTransparency = 1,
-						Position = UDim2New(0, 0, 0, 16),
+						Position = UDim2New(0, 0, 0, 0),
 						BorderSizePixel = 0,
 						TextTransparency = 0.5,
 						ZIndex = 2,
-						TextSize = 12
+						TextSize = 12,
+						LayoutOrder = 1
 					}):AddToTheme({TextColor3 = 'Text'})
 				end
 
 				Items["SubElements"] = Instances:Create("Frame", {
-					Parent = Items["Label"].Instance,
+					Parent = Items["MainRow"].Instance,
 					Name = "\0",
 					BorderColor3 = FromRGB(0, 0, 0),
-					AnchorPoint = Vector2New(1, 0),
 					BackgroundTransparency = 1,
+					AnchorPoint = Vector2New(1, 0),
 					Position = UDim2New(1, 0, 0, 0),
 					Size = UDim2New(0, 0, 1, 0),
-					BorderSizePixel = 0
+					BorderSizePixel = 0,
+					LayoutOrder = 1
 				})
 
 				Instances:Create("UIListLayout", {
@@ -6451,7 +6493,7 @@ local Library do
 					VerticalAlignment = Enum.VerticalAlignment.Center,
 					FillDirection = Enum.FillDirection.Horizontal,
 					HorizontalAlignment = Enum.HorizontalAlignment.Right,
-					Padding = UDimNew(0, 8),
+					Padding = UDimNew(0, 0),
 					SortOrder = Enum.SortOrder.LayoutOrder
 				})
 			end
