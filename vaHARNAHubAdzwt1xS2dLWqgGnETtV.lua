@@ -965,7 +965,7 @@ local Library do
 
 		local FontSuccess, LoadedFont = pcall(CustomFont.New, CustomFont, "InterSemiBold", 400, "Regular", {
 			Id = "InterSemiBold",
-            Url = "https://github.com/sametexe001/luas/Text/refs/heads/main/fonts/InterSemibold.ttf"
+            Url = "https://github.com/sametexe001/luas/raw/refs/heads/main/fonts/InterSemibold.ttf"
 		})
 		
 		Library.Font = FontSuccess and LoadedFont or Font.new(DefaultFont)
