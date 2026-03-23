@@ -1,3 +1,4 @@
+
 if not LPH_OBFUSCATED then
 	LPH_JIT_MAX = function(...) return ... end
 	LPH_NO_VIRTUALIZE = function(f) return f end
@@ -503,7 +504,11 @@ local Library do
 
 				for Property, Value in pairs(NewItem.Properties) do
 					local PropSuccess = pcall(function()
-						NewItem.Instance[Property] = Value
+						if Property == "FontFace" and typeof(Value) == "EnumItem" and Value.EnumType == Enum.Font then
+							NewItem.Instance.Font = Value
+						else
+							NewItem.Instance[Property] = Value
+						end
 					end)
 				end
 
@@ -902,10 +907,35 @@ local Library do
 
 	local DefaultFont = Enum.Font.GothamBold
 
+	-- Some executors omit the global `Font` table; guard all Font.new usage.
+	local FontClass = Font
+	if FontClass == nil and type(getgenv) == "function" then
+		local g = getgenv()
+		if type(g) == "table" and g.Font ~= nil then
+			FontClass = g.Font
+		end
+	end
+	if FontClass == nil and type(getrenv) == "function" then
+		local r = getrenv()
+		if type(r) == "table" and r.Font ~= nil then
+			FontClass = r.Font
+		end
+	end
+
+	local function safeFontNew(...)
+		if FontClass == nil then
+			return nil
+		end
+		local ok, res = pcall(function(...)
+			return FontClass.new(...)
+		end, ...)
+		return ok and res or nil
+	end
+
 	local CustomFont = { } do
 		function CustomFont:New(Name, Weight, Style, Data)
 			local FontFallback = function()
-				return Font.new(DefaultFont)
+				return safeFontNew(DefaultFont)
 			end
 			
 			local Success, Result = pcall(function()
@@ -953,7 +983,7 @@ local Library do
 					return nil
 				end
 				
-				return Font.new(FontAssetPath)
+				return safeFontNew(FontAssetPath)
 			end)
 			
 			if Success and Result then
@@ -968,7 +998,11 @@ local Library do
             Url = "https://github.com/sametexe001/luas/raw/refs/heads/main/fonts/InterSemibold.ttf"
 		})
 		
-		Library.Font = FontSuccess and LoadedFont or Font.new(DefaultFont)
+		local resolved = FontSuccess and LoadedFont
+		if not resolved then
+			resolved = safeFontNew(DefaultFont)
+		end
+		Library.Font = resolved or DefaultFont
 	end
 
 	Library.Holder = Instances:Create("ScreenGui", {
