@@ -8,9 +8,6 @@ getgenv().luarmor_api = getgenv().luarmor_api or nil
 getgenv().key_expire = getgenv().key_expire or nil
 getgenv().key_note = getgenv().key_note or nil
 getgenv().key_executions = getgenv().key_executions or nil
-getgenv().key_discord = getgenv().key_discord or nil
-getgenv().key_hwid = getgenv().key_hwid or nil
-getgenv().key_resets = getgenv().key_resets or nil
 
 if not LPH_OBFUSCATED then
 	LPH_JIT_MAX = function(...) return ... end
@@ -1193,6 +1190,127 @@ local Library do
 		PaddingRight = UDimNew(0, 12),
 		PaddingLeft = UDimNew(0, 12)
 	})    
+
+	Library.GetDataFromLuarmor = function(self, Section)
+		local KeyStatus_Label
+		local KeyExpires_Label
+		local KeyExecutions_Label
+		local KeyNote_Label
+
+		local function ToTime(v)
+			if v <= 0 or not v then
+				return "Lifetime"
+			end
+
+			local days = math.floor(v / 86400)
+			local hours = math.floor((v % 86400) / 3600)
+			local minutes = math.floor((v % 3600) / 60)
+			local seconds = v % 60
+
+			if days > 0 then
+				return string.format("%dd %dh %dm %ds", days, hours, minutes, seconds)
+			elseif hours > 0 then
+				return string.format("%dh %dm %ds", hours, minutes, seconds)
+			elseif minutes > 0 then
+				return string.format("%dm %ds", minutes, seconds)
+			else
+				return string.format("%ds", seconds)
+			end
+		end
+
+		local function GetMaskedKey()
+			local key = getgenv().key
+
+			if not key or key == "" then
+				return "N/A"
+			end
+
+			if #key <= 16 then
+				return key:sub(1, 4) .. "***" .. key:sub(-4)
+			end
+
+			return key:sub(1, 8) .. "***" .. key:sub(-8)
+		end
+
+		local function UpdateKeyInfo()
+			local key = getgenv().key
+
+			if not key or key == "" then return end
+
+			local expire = getgenv().key_expire
+
+			if expire and expire > 0 then
+				local remaining = expire - os.time()
+
+				if remaining > 0 then
+					KeyExpires_Label:SetText("Expires: " .. ToTime(remaining))
+				else
+					KeyExpires_Label:SetText("Expires: Expired")
+					KeyStatus_Label:SetText("Status: Expired")
+				end
+			else
+				KeyExpires_Label:SetText("Expires: Lifetime")
+			end
+
+			local note = getgenv().key_note
+			KeyNote_Label:SetText("Note: " .. (note and note ~= "" and tostring(note) or "None"))
+
+			local exec = getgenv().key_executions
+			KeyExecutions_Label:SetText("Executions: " .. tostring(exec or 0))
+		end
+
+		local function RefreshKeyFromAPI()
+			local key = getgenv().key
+			local api = getgenv().luarmor_api
+
+			if not key or key == "" or not api then return end
+
+			local Success, Result = pcall(api.check_key, key)
+
+			if Success and Result.code == "KEY_VALID" then
+				getgenv().key_expire = Result.data.auth_expire
+				getgenv().key_note = Result.data.note
+				getgenv().key_executions = Result.data.total_executions or 0
+			end
+
+			UpdateKeyInfo()
+		end
+
+		local current_key = getgenv().key
+
+		if current_key and current_key ~= "" then
+			local expire = getgenv().key_expire
+
+			KeyStatus_Label = Section:Label("Status: Active", "")
+
+			if expire and expire > 0 then
+				local remaining = expire - os.time()
+				KeyExpires_Label = Section:Label("Expires: " .. ToTime(remaining), "")
+			else
+				KeyExpires_Label = Section:Label("Expires: Lifetime", "")
+			end
+
+			KeyExecutions_Label = Section:Label("Executions: " .. tostring(getgenv().key_executions or 0), "")
+			KeyNote_Label = Section:Label("Note: " .. (getgenv().key_note or "None"), "")
+		else
+			KeyStatus_Label = Section:Label("Status: No Key", "")
+			KeyExpires_Label = Section:Label("Expires: N/A", "")
+			KeyExecutions_Label = Section:Label("Executions: N/A", "")
+			KeyNote_Label = Section:Label("Note: N/A", "")
+		end
+
+		Library:Thread(LPH_NO_VIRTUALIZE(function()
+			while wait(1) do
+				UpdateKeyInfo()
+			end
+		end))
+
+		Library:Thread(LPH_NO_VIRTUALIZE(function()
+			while wait(180) do
+				RefreshKeyFromAPI()
+			end
+		end))
+	end
 
 	Library.Unload = function(self)
 		for Index, Value in self.Connections do 
@@ -7016,6 +7134,188 @@ local Library do
 		local Settings = Window:Page({Name = "Settings", Columns = 2})
 
 		do
+			local ThemeSetting_Section = Settings:Section({Name = "Theme Setting", Side = 1})
+			local ThemeConfig_Section = Settings:Section({Name = "Theme Config", Side = 1})
+			local Theme_Colorpicker = { }
+
+			do
+				for Index, Value in Library.Theme do 
+					Theme_Colorpicker[Index] = ThemeSetting_Section:Label(Index, Index:lower() .. " theme color"):Colorpicker({
+						Flag = Index,
+						Default = Value,
+						Alpha = 0,
+						Callback = function(Value)
+							Library.Theme[Index] = Value
+							Library:ChangeTheme(Index, Value)
+						end
+					})
+				end
+			end
+
+			do
+				local Theme_Name 
+				local Theme_Selected 
+
+				local Theme_Dropdown = ThemeConfig_Section:Dropdown({
+					Name = "Themes Select",
+					Flag = "Themes Select",
+					Description = "Select a theme preset",
+					Items = { },
+					Multi = false,
+					Callback = function(Value)
+						Theme_Selected = Value 
+					end
+				})
+
+				ThemeConfig_Section:Textbox({
+					Name = "Theme Name",
+					Flag = "Theme Name",
+					Description = "Enter a name for your theme",
+					Placeholder = "Theme name...",
+					Finished = true,
+					Callback = function(Value)
+						Theme_Name = Value 
+					end
+				})
+
+				ThemeConfig_Section:Button():Add("Create", function()
+					if Theme_Name then 
+						if Theme_Name == "" then 
+							return
+						end
+
+						writefile(Library:GetFolderTheme() .. Theme_Name .. ".json", Library:GetTheme())
+						Library:RefreshThemeList(Theme_Dropdown)
+
+						Library:Notification({
+							Name = "Success",
+							Description = "Succesfully created theme: ".. Theme_Name,
+							Color = Color3.fromRGB(0, 255, 0),
+							Duration = 5
+						})
+					end
+				end):Add("Delete", function()
+					if Theme_Selected then 
+						if isfile(Library:GetFolderTheme().. Theme_Selected .. ".json") then
+							delfile(Library:GetFolderTheme().. Theme_Selected .. ".json")
+							Library:RefreshThemeList(Theme_Dropdown)
+
+							Library:Notification({
+								Name = "Success",
+								Description = "Succesfully deleted theme: ".. Theme_Selected,
+								Color = Color3.fromRGB(0, 255, 0),
+								Duration = 5
+							})
+						end
+					end
+				end)
+
+				ThemeSetting_Section:Button():Add("Load", function()
+					if Theme_Selected then 
+						if isfile(Library:GetFolderTheme().. Theme_Selected .. ".json") then
+							local ThemeContent = readfile(Library:GetFolderTheme().. Theme_Selected .. ".json")
+							local Success, Error = Library:LoadTheme(ThemeContent)
+
+							if Success then 
+								Library:Notification({
+									Name = "Success",
+									Description = "Succesfully loaded theme: ".. Theme_Selected,
+									Color = Color3.fromRGB(0, 255, 0),
+									Duration = 5
+								})
+							else
+								Library:Notification({
+									Name = "Error",
+									Description = "Failed to load theme: ".. Theme_Selected .. " " .. Error,
+									Color = Color3.fromRGB(255, 0, 0),
+									Duration = 5
+								})
+							end
+						else
+							Library:Notification({
+								Name = "Error",
+								Description = "Failed to find theme: ".. Theme_Selected,
+								Color = Color3.fromRGB(255, 0, 0),
+								Duration = 5
+							})
+						end
+					end
+				end):Add("Save", function()
+					if Theme_Selected then
+						if isfile(Library:GetFolderTheme().. Theme_Selected .. ".json") then
+
+							local Success, Error = pcall(function()
+								writefile(Library:GetFolderTheme().. Theme_Selected .. ".json", Library:GetTheme())
+							end)
+
+							if Success then 
+								Library:Notification({
+									Name = "Success",
+									Description = "Succesfully saved theme: ".. Theme_Selected,
+									Color = Color3.fromRGB(0, 255, 0),
+									Duration = 5
+								})
+							else
+								Library:Notification({
+									Name = "Error",
+									Description = "Failed to save theme: ".. Theme_Selected .. " " .. Error,
+									Color = Color3.fromRGB(255, 0, 0),
+									Duration = 5
+								})
+							end
+						else
+							Library:Notification({
+								Name = "Error",
+								Description = "Failed to find theme: ".. Theme_Selected,
+								Color = Color3.fromRGB(255, 0, 0),
+								Duration = 5
+							})
+						end
+					end
+				end)
+
+				ThemeSetting_Section:Button():Add("Refresh", function()
+					Library:RefreshThemeList(Theme_Dropdown)
+				end)
+
+				local Preset_Section = ThemeSetting_Section:Dropdown({
+					Name = "Themes Preset", 
+					Flag = "Themes Preset", 
+					Description = "Select a theme",
+					Items = { }, 
+					Default = "Preset",
+					Multi = false,
+					Callback = function(Value)
+						local ThemeData = Library.Themes[Value]
+
+						if not ThemeData then 
+							return
+						end
+
+						for Index, Value in Library.Theme do 
+							Library.Theme[Index] = ThemeData[Index]
+							Library:ChangeTheme(Index, ThemeData[Index])
+
+							Theme_Colorpicker[Index]:Set(ThemeData[Index])
+						end
+					end
+				})
+
+				for Index, Value in Library.Themes do 
+					Preset_Section:Add(Index)
+				end
+
+				Library:RefreshThemeList(Theme_Dropdown)
+			end
+		end
+
+		do
+			local KeyInfo_Section = Settings:Section({Name = "Key Info", Side = 2})
+
+			Library:GetDataFromLuarmor(KeyInfo_Section)
+		end
+
+		do
 			local ConfigHub_Section = Settings:Section({Name = "Config Hub", Side = 2})
 
 			do
@@ -7220,356 +7520,6 @@ local Library do
 				end)
 
 				Library:RefreshConfigsList(Config_Dropdown)
-			end
-		end
-
-		do
-			local KeyInfo_Section = Settings:Section({Name = "Key Info", Side = 2})
-			local KeyStatus_Label
-			local KeyExpires_Label
-			local KeyExecutions_Label
-			local KeyResets_Label
-			local KeyNote_Label
-			local KeyDiscord_Label
-			local KeyHWID_Label
-
-			local function ToTime(v)
-				if v <= 0 or not v then
-					return "Lifetime"
-				end
-
-				local days = math.floor(v / 86400)
-				local hours = math.floor((v % 86400) / 3600)
-				local minutes = math.floor((v % 3600) / 60)
-				local seconds = v % 60
-
-				if days > 0 then
-					return string.format("%dd %dh %dm %ds", days, hours, minutes, seconds)
-				elseif hours > 0 then
-					return string.format("%dh %dm %ds", hours, minutes, seconds)
-				elseif minutes > 0 then
-					return string.format("%dm %ds", minutes, seconds)
-				else
-					return string.format("%ds", seconds)
-				end
-			end
-
-			local function GetMaskedKey()
-				local key = getgenv().key
-
-				if not key or key == "" then
-					return "N/A"
-				end
-
-				if #key <= 16 then
-					return key:sub(1, 4) .. "***" .. key:sub(-4)
-				end
-
-				return key:sub(1, 8) .. "***" .. key:sub(-8)
-			end
-
-			local function GetMaskedHWID()
-				local hwid = getgenv().key_hwid
-
-				if not hwid or hwid == "" then
-					return "N/A"
-				end
-
-				if #hwid <= 16 then
-					return hwid:sub(1, 4) .. "***" .. hwid:sub(-4)
-				end
-
-				return hwid:sub(1, 8) .. "***" .. hwid:sub(-8)
-			end
-
-			local function UpdateKeyInfo()
-				local key = getgenv().key
-
-				if not key or key == "" then return end
-
-				local expire = getgenv().key_expire
-
-				if expire and expire > 0 then
-					local remaining = expire - os.time()
-
-					if remaining > 0 then
-						KeyExpires_Label:SetText("Expires: " .. ToTime(remaining))
-					else
-						KeyExpires_Label:SetText("Expires: Expired")
-						KeyStatus_Label:SetText("Status: Expired")
-					end
-				else
-					KeyExpires_Label:SetText("Expires: Lifetime")
-				end
-
-				local note = getgenv().key_note
-				KeyNote_Label:SetText("Note: " .. (note and note ~= "" and tostring(note) or "None"))
-
-				local exec = getgenv().key_executions
-				KeyExecutions_Label:SetText("Executions: " .. tostring(exec or 0))
-
-				local resets = getgenv().key_resets
-				KeyResets_Label:SetText("HWID Resets: " .. tostring(resets or 0))
-
-				local discord = getgenv().key_discord
-				KeyDiscord_Label:SetText("Discord: " .. (discord and discord ~= "" and tostring(discord) or "Not linked"))
-
-				local hwid = getgenv().key_hwid
-				KeyHWID_Label:SetText("HWID: " .. GetMaskedHWID())
-			end
-
-			local function RefreshKeyFromAPI()
-				local key = getgenv().key
-				local api = getgenv().luarmor_api
-
-				if not key or key == "" or not api then return end
-
-				local Success, Result = pcall(api.check_key, key)
-
-				if Success and Result.code == "KEY_VALID" then
-					getgenv().key_expire = Result.data.auth_expire
-					getgenv().key_note = Result.data.note
-					getgenv().key_executions = Result.data.total_executions or 0
-				end
-
-				local script_id = api.script_id
-
-				if script_id then
-					local Success1, Result1 = pcall(function()
-						return game:HttpGet("https://api.luarmor.net/v3/projects/" .. script_id .. "/users?user_key=" .. key)
-					end)
-
-					if Success1 and Result1 then
-						local Success2, Result2 = pcall(HttpService.JSONDecode, HttpService, Result1)
-
-						if Success2 and Result2 and Result2.users and Result2.users[1] then
-							local User = Result2.users[1]
-
-							getgenv().key_discord = User.discord_id or ""
-							getgenv().key_hwid = User.identifier or ""
-							getgenv().key_resets = User.total_resets or 0
-						end
-					end
-				end
-
-				UpdateKeyInfo()
-			end
-
-			local current_key = getgenv().key
-
-			if current_key and current_key ~= "" then
-				local expire = getgenv().key_expire
-
-				KeyStatus_Label = KeyInfo_Section:Label("Status: Active", "")
-
-				if expire and expire > 0 then
-					local remaining = expire - os.time()
-					KeyExpires_Label = KeyInfo_Section:Label("Expires: " .. ToTime(remaining), "")
-				else
-					KeyExpires_Label = KeyInfo_Section:Label("Expires: Lifetime", "")
-				end
-
-				KeyExecutions_Label = KeyInfo_Section:Label("Executions: " .. tostring(getgenv().key_executions or 0), "")
-				KeyResets_Label = KeyInfo_Section:Label("HWID Resets: " .. tostring(getgenv().key_resets or 0), "")
-				KeyNote_Label = KeyInfo_Section:Label("Note: " .. (getgenv().key_note or "None"), "")
-				KeyDiscord_Label = KeyInfo_Section:Label("Discord: " .. (getgenv().key_discord or "Not linked"), "")
-				KeyHWID_Label = KeyInfo_Section:Label("HWID: " .. GetMaskedHWID(), "")
-			else
-				KeyStatus_Label = KeyInfo_Section:Label("Status: No Key", "")
-				KeyExpires_Label = KeyInfo_Section:Label("Expires: N/A", "")
-				KeyExecutions_Label = KeyInfo_Section:Label("Executions: N/A", "")
-				KeyResets_Label = KeyInfo_Section:Label("HWID Resets: N/A", "")
-				KeyNote_Label = KeyInfo_Section:Label("Note: N/A", "")
-				KeyDiscord_Label = KeyInfo_Section:Label("Discord: N/A", "")
-				KeyHWID_Label = KeyInfo_Section:Label("HWID: N/A", "")
-			end
-
-			Library:Thread(LPH_NO_VIRTUALIZE(function()
-				while wait(1) do
-					UpdateKeyInfo()
-				end
-			end))
-
-			Library:Thread(LPH_NO_VIRTUALIZE(function()
-				while wait(180) do
-					RefreshKeyFromAPI()
-				end
-			end))
-		end
-
-		do
-			local ThemeSetting_Section = Settings:Section({Name = "Theme Setting", Side = 1})
-			local ThemeConfig_Section = Settings:Section({Name = "Theme Config", Side = 1})
-			local Theme_Colorpicker = { }
-
-			do
-				for Index, Value in Library.Theme do 
-					Theme_Colorpicker[Index] = ThemeSetting_Section:Label(Index, Index:lower() .. " theme color"):Colorpicker({
-						Flag = Index,
-						Default = Value,
-						Alpha = 0,
-						Callback = function(Value)
-							Library.Theme[Index] = Value
-							Library:ChangeTheme(Index, Value)
-						end
-					})
-				end
-			end
-
-			do
-				local Theme_Name 
-				local Theme_Selected 
-
-				local Theme_Dropdown = ThemeConfig_Section:Dropdown({
-					Name = "Themes Select",
-					Flag = "Themes Select",
-					Description = "Select a theme preset",
-					Items = { },
-					Multi = false,
-					Callback = function(Value)
-						Theme_Selected = Value 
-					end
-				})
-
-				ThemeConfig_Section:Textbox({
-					Name = "Theme Name",
-					Flag = "Theme Name",
-					Description = "Enter a name for your theme",
-					Placeholder = "Theme name...",
-					Finished = true,
-					Callback = function(Value)
-						Theme_Name = Value 
-					end
-				})
-
-				ThemeConfig_Section:Button():Add("Create", function()
-					if Theme_Name then 
-						if Theme_Name == "" then 
-							return
-						end
-
-						writefile(Library:GetFolderTheme() .. Theme_Name .. ".json", Library:GetTheme())
-						Library:RefreshThemeList(Theme_Dropdown)
-
-						Library:Notification({
-							Name = "Success",
-							Description = "Succesfully created theme: ".. Theme_Name,
-							Color = Color3.fromRGB(0, 255, 0),
-							Duration = 5
-						})
-					end
-				end):Add("Delete", function()
-					if Theme_Selected then 
-						if isfile(Library:GetFolderTheme().. Theme_Selected .. ".json") then
-							delfile(Library:GetFolderTheme().. Theme_Selected .. ".json")
-							Library:RefreshThemeList(Theme_Dropdown)
-
-							Library:Notification({
-								Name = "Success",
-								Description = "Succesfully deleted theme: ".. Theme_Selected,
-								Color = Color3.fromRGB(0, 255, 0),
-								Duration = 5
-							})
-						end
-					end
-				end)
-
-				ThemeSetting_Section:Button():Add("Load", function()
-					if Theme_Selected then 
-						if isfile(Library:GetFolderTheme().. Theme_Selected .. ".json") then
-							local ThemeContent = readfile(Library:GetFolderTheme().. Theme_Selected .. ".json")
-							local Success, Error = Library:LoadTheme(ThemeContent)
-
-							if Success then 
-								Library:Notification({
-									Name = "Success",
-									Description = "Succesfully loaded theme: ".. Theme_Selected,
-									Color = Color3.fromRGB(0, 255, 0),
-									Duration = 5
-								})
-							else
-								Library:Notification({
-									Name = "Error",
-									Description = "Failed to load theme: ".. Theme_Selected .. " " .. Error,
-									Color = Color3.fromRGB(255, 0, 0),
-									Duration = 5
-								})
-							end
-						else
-							Library:Notification({
-								Name = "Error",
-								Description = "Failed to find theme: ".. Theme_Selected,
-								Color = Color3.fromRGB(255, 0, 0),
-								Duration = 5
-							})
-						end
-					end
-				end):Add("Save", function()
-					if Theme_Selected then
-						if isfile(Library:GetFolderTheme().. Theme_Selected .. ".json") then
-
-							local Success, Error = pcall(function()
-								writefile(Library:GetFolderTheme().. Theme_Selected .. ".json", Library:GetTheme())
-							end)
-
-							if Success then 
-								Library:Notification({
-									Name = "Success",
-									Description = "Succesfully saved theme: ".. Theme_Selected,
-									Color = Color3.fromRGB(0, 255, 0),
-									Duration = 5
-								})
-							else
-								Library:Notification({
-									Name = "Error",
-									Description = "Failed to save theme: ".. Theme_Selected .. " " .. Error,
-									Color = Color3.fromRGB(255, 0, 0),
-									Duration = 5
-								})
-							end
-						else
-							Library:Notification({
-								Name = "Error",
-								Description = "Failed to find theme: ".. Theme_Selected,
-								Color = Color3.fromRGB(255, 0, 0),
-								Duration = 5
-							})
-						end
-					end
-				end)
-
-				ThemeSetting_Section:Button():Add("Refresh", function()
-					Library:RefreshThemeList(Theme_Dropdown)
-				end)
-
-				local Preset_Section = ThemeSetting_Section:Dropdown({
-					Name = "Themes Preset", 
-					Flag = "Themes Preset", 
-					Description = "Select a theme",
-					Items = { }, 
-					Default = "Preset",
-					Multi = false,
-					Callback = function(Value)
-						local ThemeData = Library.Themes[Value]
-
-						if not ThemeData then 
-							return
-						end
-
-						for Index, Value in Library.Theme do 
-							Library.Theme[Index] = ThemeData[Index]
-							Library:ChangeTheme(Index, ThemeData[Index])
-
-							Theme_Colorpicker[Index]:Set(ThemeData[Index])
-						end
-					end
-				})
-
-				for Index, Value in Library.Themes do 
-					Preset_Section:Add(Index)
-				end
-
-				Library:RefreshThemeList(Theme_Dropdown)
 			end
 		end
 
