@@ -8,6 +8,9 @@ getgenv().luarmor_api = getgenv().luarmor_api or nil
 getgenv().key_expire = getgenv().key_expire or nil
 getgenv().key_note = getgenv().key_note or nil
 getgenv().key_executions = getgenv().key_executions or nil
+getgenv().key_discord = getgenv().key_discord or nil
+getgenv().key_hwid = getgenv().key_hwid or nil
+getgenv().key_resets = getgenv().key_resets or nil
 
 if not LPH_OBFUSCATED then
 	LPH_JIT_MAX = function(...) return ... end
@@ -7224,9 +7227,11 @@ local Library do
 			local KeyInfo_Section = Settings:Section({Name = "Key Info", Side = 2})
 			local KeyStatus_Label
 			local KeyExpires_Label
-			local KeyValue_Label
-			local KeyNote_Label
 			local KeyExecutions_Label
+			local KeyResets_Label
+			local KeyNote_Label
+			local KeyDiscord_Label
+			local KeyHWID_Label
 
 			local function ToTime(v)
 				if v <= 0 or not v then
@@ -7236,13 +7241,16 @@ local Library do
 				local days = math.floor(v / 86400)
 				local hours = math.floor((v % 86400) / 3600)
 				local minutes = math.floor((v % 3600) / 60)
+				local seconds = v % 60
 
 				if days > 0 then
-					return string.format("%dd %dh %dm", days, hours, minutes)
+					return string.format("%dd %dh %dm %ds", days, hours, minutes, seconds)
 				elseif hours > 0 then
-					return string.format("%dh %dm", hours, minutes)
+					return string.format("%dh %dm %ds", hours, minutes, seconds)
+				elseif minutes > 0 then
+					return string.format("%dm %ds", minutes, seconds)
 				else
-					return string.format("%dm", minutes)
+					return string.format("%ds", seconds)
 				end
 			end
 
@@ -7250,41 +7258,64 @@ local Library do
 				local key = getgenv().key
 
 				if not key or key == "" then
-					return "No Key"
+					return "N/A"
 				end
 
-				return key:sub(1, 6) .. "****" .. key:sub(-6)
+				if #key <= 16 then
+					return key:sub(1, 4) .. "***" .. key:sub(-4)
+				end
+
+				return key:sub(1, 8) .. "***" .. key:sub(-8)
+			end
+
+			local function GetMaskedHWID()
+				local hwid = getgenv().key_hwid
+
+				if not hwid or hwid == "" then
+					return "N/A"
+				end
+
+				if #hwid <= 16 then
+					return hwid:sub(1, 4) .. "***" .. hwid:sub(-4)
+				end
+
+				return hwid:sub(1, 8) .. "***" .. hwid:sub(-8)
 			end
 
 			local function UpdateKeyInfo()
 				local key = getgenv().key
 
-				if key and key ~= "" then
-					local expire = getgenv().key_expire
+				if not key or key == "" then return end
 
-					if expire and expire > 0 then
-						local remaining = expire - os.time()
+				local expire = getgenv().key_expire
 
-						if remaining > 0 then
-							KeyExpires_Label:SetText("Expires: " .. ToTime(remaining))
-						else
-							KeyExpires_Label:SetText("Status: Expired")
-							KeyStatus_Label:SetText("Status: Expired")
-						end
+				if expire and expire > 0 then
+					local remaining = expire - os.time()
+
+					if remaining > 0 then
+						KeyExpires_Label:SetText("Expires: " .. ToTime(remaining))
 					else
-						KeyExpires_Label:SetText("Expires: Lifetime")
+						KeyExpires_Label:SetText("Expires: Expired")
+						KeyStatus_Label:SetText("Status: Expired")
 					end
-
-					local note = getgenv().key_note
-					if note and note ~= "" then
-						KeyNote_Label:SetText("Note: " .. tostring(note))
-					end
-
-					local exec = getgenv().key_executions
-					if exec then
-						KeyExecutions_Label:SetText("Executions: " .. tostring(exec))
-					end
+				else
+					KeyExpires_Label:SetText("Expires: Lifetime")
 				end
+
+				local note = getgenv().key_note
+				KeyNote_Label:SetText("Note: " .. (note and note ~= "" and tostring(note) or "None"))
+
+				local exec = getgenv().key_executions
+				KeyExecutions_Label:SetText("Executions: " .. tostring(exec or 0))
+
+				local resets = getgenv().key_resets
+				KeyResets_Label:SetText("HWID Resets: " .. tostring(resets or 0))
+
+				local discord = getgenv().key_discord
+				KeyDiscord_Label:SetText("Discord: " .. (discord and discord ~= "" and tostring(discord) or "Not linked"))
+
+				local hwid = getgenv().key_hwid
+				KeyHWID_Label:SetText("HWID: " .. GetMaskedHWID())
 			end
 
 			local function RefreshKeyFromAPI()
@@ -7293,15 +7324,35 @@ local Library do
 
 				if not key or key == "" or not api then return end
 
-				local success, status = pcall(api.check_key, key)
+				local Success, Result = pcall(api.check_key, key)
 
-				if success and status.code == "KEY_VALID" then
-					getgenv().key_expire = status.data.auth_expire
-					getgenv().key_note = status.data.note or "None"
-					getgenv().key_executions = status.data.total_executions or 0
-
-					UpdateKeyInfo()
+				if Success and Result.code == "KEY_VALID" then
+					getgenv().key_expire = Result.data.auth_expire
+					getgenv().key_note = Result.data.note
+					getgenv().key_executions = Result.data.total_executions or 0
 				end
+
+				local script_id = api.script_id
+
+				if script_id then
+					local Success1, Result1 = pcall(function()
+						return game:HttpGet("https://api.luarmor.net/v3/projects/" .. script_id .. "/users?user_key=" .. key)
+					end)
+
+					if Success1 and Result1 then
+						local Success2, Result2 = pcall(HttpService.JSONDecode, HttpService, Result1)
+
+						if Success2 and Result2 and Result2.users and Result2.users[1] then
+							local User = Result2.users[1]
+
+							getgenv().key_discord = User.discord_id or ""
+							getgenv().key_hwid = User.identifier or ""
+							getgenv().key_resets = User.total_resets or 0
+						end
+					end
+				end
+
+				UpdateKeyInfo()
 			end
 
 			local current_key = getgenv().key
@@ -7313,34 +7364,37 @@ local Library do
 
 				if expire and expire > 0 then
 					local remaining = expire - os.time()
-
 					KeyExpires_Label = KeyInfo_Section:Label("Expires: " .. ToTime(remaining), "")
 				else
 					KeyExpires_Label = KeyInfo_Section:Label("Expires: Lifetime", "")
 				end
 
-				KeyValue_Label = KeyInfo_Section:Label("Key: " .. GetMaskedKey(), "")
-				KeyNote_Label = KeyInfo_Section:Label("Note: " .. (getgenv().key_note or "None"), "")
 				KeyExecutions_Label = KeyInfo_Section:Label("Executions: " .. tostring(getgenv().key_executions or 0), "")
+				KeyResets_Label = KeyInfo_Section:Label("HWID Resets: " .. tostring(getgenv().key_resets or 0), "")
+				KeyNote_Label = KeyInfo_Section:Label("Note: " .. (getgenv().key_note or "None"), "")
+				KeyDiscord_Label = KeyInfo_Section:Label("Discord: " .. (getgenv().key_discord or "Not linked"), "")
+				KeyHWID_Label = KeyInfo_Section:Label("HWID: " .. GetMaskedHWID(), "")
 			else
 				KeyStatus_Label = KeyInfo_Section:Label("Status: No Key", "")
 				KeyExpires_Label = KeyInfo_Section:Label("Expires: N/A", "")
-				KeyValue_Label = KeyInfo_Section:Label("Key: N/A", "")
-				KeyNote_Label = KeyInfo_Section:Label("Note: N/A", "")
 				KeyExecutions_Label = KeyInfo_Section:Label("Executions: N/A", "")
+				KeyResets_Label = KeyInfo_Section:Label("HWID Resets: N/A", "")
+				KeyNote_Label = KeyInfo_Section:Label("Note: N/A", "")
+				KeyDiscord_Label = KeyInfo_Section:Label("Discord: N/A", "")
+				KeyHWID_Label = KeyInfo_Section:Label("HWID: N/A", "")
 			end
 
-			spawn(function()
+			Library:Thread(LPH_NO_VIRTUALIZE(function()
 				while wait(1) do
 					UpdateKeyInfo()
 				end
-			end)
+			end))
 
-			spawn(function()
+			Library:Thread(LPH_NO_VIRTUALIZE(function()
 				while wait(180) do
 					RefreshKeyFromAPI()
 				end
-			end)
+			end))
 		end
 
 		do
