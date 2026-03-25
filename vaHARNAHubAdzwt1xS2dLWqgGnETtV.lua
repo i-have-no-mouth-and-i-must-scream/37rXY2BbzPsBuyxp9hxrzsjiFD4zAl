@@ -1231,8 +1231,7 @@ local Library do
 				if remaining > 0 then
 					KeyExpires_Label:SetText("Expires: " .. ToTime(remaining))
 				else
-					KeyExpires_Label:SetText("Expires: Expired")
-					KeyStatus_Label:SetText("Status: Expired")
+					Players.LocalPlayer:Kick("Your key has expired.")
 				end
 			else
 				KeyExpires_Label:SetText("Expires: Lifetime")
