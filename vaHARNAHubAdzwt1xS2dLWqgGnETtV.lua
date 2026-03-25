@@ -7210,6 +7210,128 @@ local Library do
 		end
 
 		do
+			local KeyInfo_Section = Settings:Section({Name = "Key Info", Side = 2})
+			local KeyStatus_Label
+			local KeyExpires_Label
+			local KeyValue_Label
+			local KeyNote_Label
+			local KeyExecutions_Label
+
+			local function ToTime(v)
+				if v <= 0 or not v then
+					return "Lifetime"
+				end
+
+				local days = math.floor(v / 86400)
+				local hours = math.floor((v % 86400) / 3600)
+				local minutes = math.floor((v % 3600) / 60)
+
+				if days > 0 then
+					return string.format("%dd %dh %dm", days, hours, minutes)
+				elseif hours > 0 then
+					return string.format("%dh %dm", hours, minutes)
+				else
+					return string.format("%dm", minutes)
+				end
+			end
+
+			local function GetMaskedKey()
+				local key = getgenv().key
+
+				if not key or key == "" then
+					return "No Key"
+				end
+
+				return key:sub(1, 6) .. "****" .. key:sub(-6)
+			end
+
+			local function UpdateKeyInfo()
+				local key = getgenv().key
+
+				if key and key ~= "" then
+					local expire = getgenv().key_expire
+
+					if expire and expire > 0 then
+						local remaining = expire - os.time()
+
+						if remaining > 0 then
+							KeyExpires_Label:SetText("Expires: " .. ToTime(remaining))
+						else
+							KeyExpires_Label:SetText("Status: Expired")
+							KeyStatus_Label:SetText("Status: Expired")
+						end
+					else
+						KeyExpires_Label:SetText("Expires: Lifetime")
+					end
+
+					local note = getgenv().key_note
+					if note and note ~= "" then
+						KeyNote_Label:SetText("Note: " .. tostring(note))
+					end
+
+					local exec = getgenv().key_executions
+					if exec then
+						KeyExecutions_Label:SetText("Executions: " .. tostring(exec))
+					end
+				end
+			end
+
+			local function RefreshKeyFromAPI()
+				local key = getgenv().key
+				local api = getgenv().luarmor_api
+
+				if not key or key == "" or not api then return end
+
+				local success, status = pcall(api.check_key, key)
+
+				if success and status.code == "KEY_VALID" then
+					getgenv().key_expire = status.data.auth_expire
+					getgenv().key_note = status.data.note or "None"
+					getgenv().key_executions = status.data.total_executions or 0
+					UpdateKeyInfo()
+				end
+			end
+
+			local current_key = getgenv().key
+
+			if current_key and current_key ~= "" then
+				local expire = getgenv().key_expire
+
+				KeyStatus_Label = KeyInfo_Section:Label("Status: Active", "")
+
+				if expire and expire > 0 then
+					local remaining = expire - os.time()
+					
+					KeyExpires_Label = KeyInfo_Section:Label("Expires: " .. ToTime(remaining), "")
+				else
+					KeyExpires_Label = KeyInfo_Section:Label("Expires: Lifetime", "")
+				end
+
+				KeyValue_Label = KeyInfo_Section:Label("Key: " .. GetMaskedKey(), "")
+				KeyNote_Label = KeyInfo_Section:Label("Note: " .. (getgenv().key_note or "None"), "")
+				KeyExecutions_Label = KeyInfo_Section:Label("Executions: " .. tostring(getgenv().key_executions or 0), "")
+			else
+				KeyStatus_Label = KeyInfo_Section:Label("Status: No Key", "")
+				KeyExpires_Label = KeyInfo_Section:Label("Expires: N/A", "")
+				KeyValue_Label = KeyInfo_Section:Label("Key: N/A", "")
+				KeyNote_Label = KeyInfo_Section:Label("Note: N/A", "")
+				KeyExecutions_Label = KeyInfo_Section:Label("Executions: N/A", "")
+			end
+
+			spawn(function()
+				while wait(1) do
+					UpdateKeyInfo()
+				end
+			end)
+
+			spawn(function()
+				while wait(180) do
+					RefreshKeyFromAPI()
+				end
+			end)
+		end
+
+		do
 			local ThemeSetting_Section = Settings:Section({Name = "Theme Setting", Side = 1})
 			local ThemeConfig_Section = Settings:Section({Name = "Theme Config", Side = 1})
 			local Theme_Colorpicker = { }
