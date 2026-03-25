@@ -2700,7 +2700,11 @@ local Library do
 
 			Items["Palette"]:Connect("InputBegan", function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-					SlidingPalette = true 
+					if Colorpicker.Disabled then
+						return
+					end
+
+					SlidingPalette = true
 
 					Colorpicker:SlidePalette(Input)
 
@@ -2721,7 +2725,11 @@ local Library do
 
 			Items["Hue"]:Connect("InputBegan", function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-					SlidingHue = true 
+					if Colorpicker.Disabled then
+						return
+					end
+
+					SlidingHue = true
 
 					Colorpicker:SlideHue(Input)
 
@@ -2742,7 +2750,11 @@ local Library do
 
 			Items["Alpha"]:Connect("InputBegan", function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-					SlidingAlpha = true 
+					if Colorpicker.Disabled then
+						return
+					end
+
+					SlidingAlpha = true
 
 					Colorpicker:SlideAlpha(Input)
 
@@ -2762,6 +2774,10 @@ local Library do
 			end)
 
 			Items["Input"]:Connect("FocusLost", function()
+				if Colorpicker.Disabled then
+					return
+				end
+
 				local Text  = Items["Input"].Instance.Text
 				local R, G, B = Text:match("(%d+),%s*(%d+),%s*(%d+)")
 
@@ -2771,7 +2787,11 @@ local Library do
 
 			Library:Connect(UserInputService.InputChanged, function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
-					if SlidingPalette then 
+					if Colorpicker.Disabled then
+						return
+					end
+
+					if SlidingPalette then
 						Colorpicker:SlidePalette(Input)
 					end
 
@@ -2787,6 +2807,10 @@ local Library do
 
 			Library:Connect(UserInputService.InputBegan, function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+					if Colorpicker.Disabled then
+						return
+					end
+
 					if not Colorpicker.IsOpen then
 						return
 					end
@@ -2804,6 +2828,9 @@ local Library do
 			end
 
 			Library.SetFlags[Colorpicker.Flag] = function(Value, Alpha)
+				if Colorpicker.Disabled then
+					return
+				end
 				Colorpicker:Set(Value, Alpha)
 			end
 
@@ -3292,25 +3319,29 @@ local Library do
 			end)
 
 			Library:Connect(UserInputService.InputBegan, function(Input, Gpe)
+				if Keybind.Disabled then
+					return
+				end
+
 				if Keybind.Value == "None" then
 					return
 				end
 
 				if not Gpe then
 					if tostring(Input.KeyCode) == Keybind.Key then
-						if Keybind.Mode == "Toggle" then 
+						if Keybind.Mode == "Toggle" then
 							Keybind:Press()
-						elseif Keybind.Mode == "Hold" then 
+						elseif Keybind.Mode == "Hold" then
 							Keybind:Press(true)
-						elseif Keybind.Mode == "Always" then 
+						elseif Keybind.Mode == "Always" then
 							Keybind:Press(true)
 						end
 					elseif tostring(Input.UserInputType) == Keybind.Key then
-						if Keybind.Mode == "Toggle" then 
+						if Keybind.Mode == "Toggle" then
 							Keybind:Press()
-						elseif Keybind.Mode == "Hold" then 
+						elseif Keybind.Mode == "Hold" then
 							Keybind:Press(true)
-						elseif Keybind.Mode == "Always" then 
+						elseif Keybind.Mode == "Always" then
 							Keybind:Press(true)
 						end
 					end
@@ -3330,6 +3361,10 @@ local Library do
 			end)
 
 			Library:Connect(UserInputService.InputEnded, function(Input, Gpe)
+				if Keybind.Disabled then
+					return
+				end
+
 				if Gpe then
 					return
 				end
@@ -3339,15 +3374,15 @@ local Library do
 				end
 
 				if tostring(Input.KeyCode) == Keybind.Key then
-					if Keybind.Mode == "Hold" then 
+					if Keybind.Mode == "Hold" then
 						Keybind:Press(false)
-					elseif Keybind.Mode == "Always" then 
+					elseif Keybind.Mode == "Always" then
 						Keybind:Press(true)
 					end
 				elseif tostring(Input.UserInputType) == Keybind.Key then
-					if Keybind.Mode == "Hold" then 
+					if Keybind.Mode == "Hold" then
 						Keybind:Press(false)
-					elseif Keybind.Mode == "Always" then 
+					elseif Keybind.Mode == "Always" then
 						Keybind:Press(true)
 					end
 				end
@@ -3387,6 +3422,9 @@ local Library do
 			end
 
 			Library.SetFlags[Keybind.Flag] = function(Value)
+				if Keybind.Disabled then
+					return
+				end
 				Keybind:Set(Value)
 			end
 
@@ -5020,6 +5058,9 @@ local Library do
 			Toggle:Set(Toggle.Default)
 
 			Library.SetFlags[Toggle.Flag] = function(Value)
+				if Toggle.Disabled then
+					return
+				end
 				Toggle:Set(Value)
 			end
 
@@ -5227,6 +5268,9 @@ local Library do
 
 			Base.Items["Indicator"]:Connect("InputBegan", function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+					if Toggle.Disabled then
+						return
+					end
 					Toggle:Set(not Toggle.Value)
 				end
 			end)
@@ -5234,6 +5278,9 @@ local Library do
 			Toggle:Set(Toggle.Default)
 
 			Library.SetFlags[Toggle.Flag] = function(Value)
+				if Toggle.Disabled then
+					return
+				end
 				Toggle:Set(Value)
 			end
 
@@ -5555,6 +5602,9 @@ local Library do
 			}):AddToTheme({TextColor3 = 'Text'})
 
 			Base.Items["Value"]:Connect("Focused", function()
+				if Slider.Disabled then
+					return
+				end
 				SliderFocused = true
 
 				local Stripped = StringGSub(Base.Items["Value"].Instance.Text, "[^0-9%.%-]", "")
@@ -5563,6 +5613,9 @@ local Library do
 			end)
 
 			Base.Items["Value"]:Connect("focusLost", function(enterPressed)
+				if Slider.Disabled then
+					return
+				end
 				SliderFocused = false
 
 				local Text = Base.Items["Value"].Instance.Text
@@ -5679,6 +5732,10 @@ local Library do
 
 			Base.Items["RealSlider"]:Connect("InputBegan", function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+					if Slider.Disabled then
+						return
+					end
+
 					Slider.Sliding = true
 
 					local MouseLocation = UserInputService:GetMouseLocation()
@@ -5706,6 +5763,10 @@ local Library do
 
 			Library:Connect(UserInputService.InputChanged, function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
+					if Slider.Disabled then
+						return
+					end
+
 					if Slider.Sliding then
 						local MouseLocation = UserInputService:GetMouseLocation()
 						local SliderAbs = Base.Items["RealSlider"].Instance.AbsolutePosition
@@ -5723,6 +5784,9 @@ local Library do
 			end
 
 			Library.SetFlags[Slider.Flag] = function(Value)
+				if Slider.Disabled then
+					return
+				end
 				Slider:Set(Value)
 			end
 
@@ -6282,6 +6346,9 @@ local Library do
 				end
 
 				OptionData.Button:Connect("MouseButton1Down", function(Input)
+					if Dropdown.Disabled then
+						return
+					end
 					OptionData:Set()
 				end)
 
@@ -6339,6 +6406,10 @@ local Library do
 
 			Library:Connect(UserInputService.InputBegan, function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+					if Dropdown.Disabled then
+						return
+					end
+
 					if Dropdown.IsOpen then
 						if Library:IsMouseOverFrame(Base.Items["OptionHolder"]) then
 							return
@@ -6379,6 +6450,9 @@ local Library do
 			Base.Items["Icon"].Instance.Rotation = 0
 
 			Library.SetFlags[Dropdown.Flag] = function(Value)
+				if Dropdown.Disabled then
+					return
+				end
 				Dropdown:Set(Value)
 			end
 
@@ -6797,10 +6871,16 @@ local Library do
 
 			if Textbox.Finished then
 				Base.Items["Input"]:Connect("Focused", function()
+					if Textbox.Disabled then
+						return
+					end
 					TextFocused = true
 				end)
 
 				Base.Items["Input"]:Connect("FocusLost", function(pressedEnter)
+					if Textbox.Disabled then
+						return
+					end
 					TextFocused = false
 
 					local Text = Base.Items["Input"].Instance.Text
@@ -6831,15 +6911,25 @@ local Library do
 				end)
 			else
 				Base.Items["Input"]:Connect("Focused", function()
+					if Textbox.Disabled then
+						return
+					end
 					TextFocused = true
 				end)
 
 				Base.Items["Input"]:Connect("FocusLost", function()
+					if Textbox.Disabled then
+						return
+					end
 					TextFocused = false
 					LastStableValue = Textbox.Value
 				end)
 
 				Library:Connect(Base.Items["Input"].Instance:GetPropertyChangedSignal("Text"), function()
+					if Textbox.Disabled then
+						return
+					end
+
 					local Text = Base.Items["Input"].Instance.Text
 
 					if TextFocused then
@@ -6870,6 +6960,9 @@ local Library do
 			end
 
 			Library.SetFlags[Textbox.Flag] = function(Value)
+				if Textbox.Disabled then
+					return
+				end
 				Textbox:Set(Value)
 			end
 
