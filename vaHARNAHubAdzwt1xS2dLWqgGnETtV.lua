@@ -1218,20 +1218,6 @@ local Library do
 			end
 		end
 
-		local function GetMaskedKey()
-			local key = getgenv().key
-
-			if not key or key == "" then
-				return "N/A"
-			end
-
-			if #key <= 16 then
-				return key:sub(1, 4) .. "***" .. key:sub(-4)
-			end
-
-			return key:sub(1, 8) .. "***" .. key:sub(-8)
-		end
-
 		local function UpdateKeyInfo()
 			local key = getgenv().key
 
