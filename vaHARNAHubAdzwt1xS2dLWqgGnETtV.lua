@@ -40,7 +40,7 @@ local Library = getgenv().Library
 
 if type(Library) ~= "table" then
 	Library = {}
-
+	
 	getgenv().Library = Library
 end
 
