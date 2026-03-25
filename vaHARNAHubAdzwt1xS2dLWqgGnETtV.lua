@@ -1292,7 +1292,7 @@ local Library do
 		end))
 
 		Library:Thread(LPH_NO_VIRTUALIZE(function()
-			while wait(180) do
+			while wait(30) do
 				RefreshKeyFromAPI()
 			end
 		end))
