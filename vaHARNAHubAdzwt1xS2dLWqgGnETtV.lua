@@ -1,5 +1,3 @@
-repeat wait() until game:IsLoaded()
-
 getgenv().lilix = getgenv().lilix or nil
 getgenv().relix = getgenv().relix or nil
 
@@ -914,113 +912,32 @@ local Library do
 		end
 	end
 
-	local DefaultFont = Enum.Font.GothamBold
-
-	local FontClass = Font
-
-	if FontClass == nil and type(getgenv) == "function" then
-		local g = getgenv()
-
-		if type(g) == "table" and g.Font ~= nil then
-			FontClass = g.Font
-		end
-	end
-
-	if FontClass == nil and type(getrenv) == "function" then
-		local r = getrenv()
-
-		if type(r) == "table" and r.Font ~= nil then
-			FontClass = r.Font
-		end
-	end
-
-	local function SafeFont(...)
-		if FontClass == nil then
-			return nil
-		end
-
-		local Result, Result = pcall(function(...)
-			return FontClass.new(...)
-		end, ...)
-
-		return Result and Result or nil
-	end
-
 	local CustomFont = { } do
-
 		function CustomFont:New(Name, Weight, Style, Data)
-			local FontFallback = function()
-				return SafeFont(DefaultFont)
+			if not isfile(Data.Id) then
+				writefile(Data.Id, game:HttpGet(Data.Url))
 			end
 
-			local Success, Result = pcall(function()
-				local AssetFolder = GetFolders().Assets
-
-				if not isfolder(AssetFolder) then
-					makefolder(AssetFolder)
-				end
-
-				if not isfile(Data.Id) then 
-					local Response = HttpService:GetAsync(Data.Url)
-
-					if Response and Response ~= "" then
-						writefile(Data.Id, Response)
-					end
-				end
-
-				if not isfile(Data.Id) then
-					return nil
-				end
-
-				local FontAssetId = getcustomasset(Data.Id)
-
-				if not FontAssetId then
-					return nil
-				end
-
-				local FontJson = {
-					name = Name,
-					faces = {
-						{
-							name = Name,
-							weight = Weight,
-							style = Style,
-							assetId = FontAssetId
-						}
+			local FontData = {
+				name = Name,
+				faces = {
+					{
+						name = Name,
+						weight = Weight,
+						style = Style,
+						assetId = getcustomasset(Data.Id)
 					}
 				}
+			}
 
-				local FontFilePath = AssetFolder .. "/" .. Name .. ".font"
-				writefile(FontFilePath, HttpService:JSONEncode(FontJson))
-
-				local FontAssetPath = getcustomasset(FontFilePath)
-
-				if not FontAssetPath then
-					return nil
-				end
-
-				return SafeFont(FontAssetPath)
-			end)
-
-			if Success and Result then
-				return Result
-			end
-
-			return FontFallback()
+			writefile(GetFolders().Assets .. "/" .. Name .. ".font", HttpService:JSONEncode(FontData))
+			return Font.new(getcustomasset(GetFolders().Assets .. "/" .. Name .. ".font"))
 		end
 
-		local FontSuccess, LoadedFont = pcall(CustomFont.New, CustomFont, "InterSemibold", 400, "Regular", {
+		Library.Font = CustomFont:New("InterSemibold", 400, "Regular", {
 			Id = "InterSemibold",
-			Url = "https://github.com/sametexe001/luas/Text/refs/heads/main/fonts/InterSemibold.ttf"
+			Url = "https://raw.githubusercontent.com/sametexe001/luas/main/fonts/InterSemibold.ttf"
 		})
-
-		local Resolved = FontSuccess and LoadedFont
-
-		if not Resolved then
-			Resolved = SafeFont(DefaultFont)
-		end
-
-		Library.Font = Resolved or DefaultFont
 	end
 
 	Library.Holder = Instances:Create("ScreenGui", {
