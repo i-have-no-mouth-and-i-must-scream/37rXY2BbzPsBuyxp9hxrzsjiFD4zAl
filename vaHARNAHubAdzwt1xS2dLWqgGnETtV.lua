@@ -5158,7 +5158,7 @@ local Library do
 			Disabled = false,
 		}
 
-		local Items = { } do 
+		local Items = { } do
 			Items["Toggle"] = Instances:Create("Frame", {
 				Parent = Toggle.Section.Items["Content"].Instance,
 				Name = "\0",
@@ -5176,7 +5176,6 @@ local Library do
 				Name = "\0",
 				Size = UDim2New(1, -96, 0, 0),
 				Position = UDim2New(0, 0, 0, 0),
-				AnchorPoint = Vector2New(0, 0),
 				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
 				BorderSizePixel = 0,
@@ -5191,29 +5190,6 @@ local Library do
 				AutomaticSize = Enum.AutomaticSize.Y,
 				ZIndex = 2
 			}):AddToTheme({TextColor3 = 'Text'})
-
-			if Toggle.Description ~= nil and Toggle.Description ~= "" then
-				Items["Description"] = Instances:Create("TextLabel", {
-					Parent = Items["Toggle"].Instance,
-					Name = "\0",
-					Size = UDim2New(1, 0, 0, 0),
-					Position = UDim2New(0, 0, 0, 16.5),
-					AnchorPoint = Vector2New(0, 0),
-					BackgroundTransparency = 1,
-					BorderColor3 = FromRGB(0, 0, 0),
-					BorderSizePixel = 0,
-					Text = Toggle.Description,
-					TextColor3 = Library.Theme["Text"],
-					TextSize = 12,
-					FontFace = Library.Font,
-					TextTransparency = 0.5,
-					TextXAlignment = Enum.TextXAlignment.Left,
-					TextYAlignment = Enum.TextYAlignment.Top,
-					TextWrapped = true,
-					AutomaticSize = Enum.AutomaticSize.Y,
-					ZIndex = 2
-				}):AddToTheme({TextColor3 = 'Text'})
-			end
 
 			Items["Indicator"] = Instances:Create("TextButton", {
 				Parent = Items["Toggle"].Instance,
@@ -5269,7 +5245,14 @@ local Library do
 				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
 				BorderSizePixel = 0,
+				AutomaticSize = Enum.AutomaticSize.Y,
 				LayoutOrder = 1
+			})
+
+			Instances:Create("UISizeConstraint", {
+				Parent = Items["SubElements"].Instance,
+				Name = "\0",
+				MinSize = Vector2New(0, 20)
 			})
 
 			Instances:Create("UIListLayout", {
@@ -5281,6 +5264,28 @@ local Library do
 				HorizontalAlignment = Enum.HorizontalAlignment.Right,
 				VerticalAlignment = Enum.VerticalAlignment.Center
 			})
+
+			if Toggle.Description ~= nil and Toggle.Description ~= "" then
+				Items["Description"] = Instances:Create("TextLabel", {
+					Parent = Items["Toggle"].Instance,
+					Name = "\0",
+					Size = UDim2New(1, 0, 0, 0),
+					Position = UDim2New(0, 0, 0, 16.5),
+					BackgroundTransparency = 1,
+					BorderColor3 = FromRGB(0, 0, 0),
+					BorderSizePixel = 0,
+					Text = Toggle.Description,
+					TextColor3 = Library.Theme["Text"],
+					TextSize = 12,
+					FontFace = Library.Font,
+					TextTransparency = 0.5,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextYAlignment = Enum.TextYAlignment.Top,
+					TextWrapped = true,
+					AutomaticSize = Enum.AutomaticSize.Y,
+					ZIndex = 2
+				}):AddToTheme({TextColor3 = 'Text'})
+			end
 		end
 
 		function Toggle:Get()
