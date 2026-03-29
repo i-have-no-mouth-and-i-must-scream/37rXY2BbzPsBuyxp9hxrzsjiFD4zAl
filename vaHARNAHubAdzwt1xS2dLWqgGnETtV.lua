@@ -1343,7 +1343,27 @@ local Library do
 
 			Instances:Create("UICorner", {
 				Parent = WarningFrame.Instance,
+				Name = "\0",
 				CornerRadius = UDimNew(0, 8)
+			})
+
+			Instances:Create("TextLabel", {
+				Parent = WarningFrame.Instance,
+				Name = "\0",
+				AnchorPoint = Vector2New(0.5, 0.5),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				FontFace = Library.Font,
+				Position = UDim2New(0.5, 0, 0.5, 0),
+				RichText = false,
+				Size = UDim2New(1, -20, 0, 40),
+				Text = "Son, your key is expiring soon",
+				TextColor3 = Color3.fromRGB(255, 255, 255),
+				TextSize = 14,
+				TextTruncate = Enum.TextTruncate.None,
+				TextWrapped = true,
+				TextXAlignment = Enum.TextXAlignment.Center,
+				TextYAlignment = Enum.TextYAlignment.Center
 			})
 		end
 
