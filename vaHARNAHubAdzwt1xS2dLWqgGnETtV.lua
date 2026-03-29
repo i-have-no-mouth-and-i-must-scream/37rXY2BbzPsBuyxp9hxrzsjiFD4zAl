@@ -1,3 +1,5 @@
+repeat wait() until game:IsLoaded()
+
 getgenv().lilix = getgenv().lilix or nil
 getgenv().relix = getgenv().relix or nil
 
@@ -1050,6 +1052,11 @@ local Library do
 				writefile(Data.Id, game:HttpGet(Data.Url))
 			end
 
+			local AssetSuccess, AssetId = pcall(getcustomasset, Data.Id)
+			if not AssetSuccess then
+				return Font.fromEnum(Enum.Font.Gotham)
+			end
+
 			local FontData = {
 				name = Name,
 				faces = {
@@ -1057,19 +1064,34 @@ local Library do
 						name = Name,
 						weight = Weight,
 						style = Style,
-						assetId = getcustomasset(Data.Id)
+						assetId = AssetId
 					}
 				}
 			}
 
-			writefile(GetFolders().Assets .. "/" .. Name .. ".font", HttpService:JSONEncode(FontData))
-			return Font.new(getcustomasset(GetFolders().Assets .. "/" .. Name .. ".font"))
+			local FontPath = GetFolders().Assets .. "/" .. Name .. ".font"
+			if not isfile(FontPath) then
+				writefile(FontPath, HttpService:JSONEncode(FontData))
+			end
+
+			local FontAssetSuccess, FontAssetId = pcall(getcustomasset, FontPath)
+			if not FontAssetSuccess then
+				return Font.fromEnum(Enum.Font.Gotham)
+			end
+
+			return Font.new(FontAssetId)
 		end
 
-		Library.Font = CustomFont:New("InterSemibold", 400, "Regular", {
-			Id = "InterSemibold",
-			Url = "https://raw.githubusercontent.com/sametexe001/luas/main/fonts/InterSemibold.ttf"
-		})
+		local FontSuccess = pcall(function()
+			Library.Font = CustomFont:New("InterSemibold", 400, "Regular", {
+				Id = "InterSemibold",
+				Url = "https://raw.githubusercontent.com/sametexe001/luas/main/fonts/InterSemibold.ttf"
+			})
+		end)
+
+		if not FontSuccess then
+			Library.Font = Font.fromEnum(Enum.Font.Gotham)
+		end
 	end
 
 	Library.Holder = Instances:Create("ScreenGui", {
@@ -1241,54 +1263,29 @@ local Library do
 	})    
 
 	Library.GetDataFromPlayer = function(self, Section)
-		local PlayerUsername_Label
-		local PlayerDisplayName_Label
-		local PlayerUserId_Label
-		local PlayerMembership_Label
+		local Player = Players.LocalPlayer
 
-		local function UpdateMembershipInfo()
-			local MemberShip = Players.LocalPlayer.MembershipType
-
-			if MemberShip == Enum.MembershipType.None then
-				return "None"
-			elseif MemberShip == Enum.MembershipType.Premium then
-				return "Premium"
-			elseif MemberShip == Enum.MembershipType.CoreCrunchers then
-				return "Crunchers"
-			else
-				return tostring(MemberShip)
-			end
-		end
-
-		local function UpdatePlayerInfo()
-			PlayerUsername_Label:SetText("Username: " .. Players.LocalPlayer.Name)
-			PlayerDisplayName_Label:SetText("DisplayName: " .. Players.LocalPlayer.DisplayName)
-			PlayerUserId_Label:SetText("UserId: " .. tostring(Players.LocalPlayer.UserId))
-			PlayerMembership_Label:SetText("Membership: " .. UpdateMembershipInfo())
-		end
-
-		PlayerUsername_Label = Section:Label("Username: " .. Players.LocalPlayer.Name, "")
-		PlayerDisplayName_Label = Section:Label("DisplayName: " .. Players.LocalPlayer.DisplayName, "")
-		PlayerUserId_Label = Section:Label("UserId: " .. tostring(Players.LocalPlayer.UserId), "")
-		PlayerMembership_Label = Section:Label("Membership: " .. UpdateMembershipInfo(), "")
-
-		Library:Thread(LPH_NO_VIRTUALIZE(function()
-			while wait(3) do
-				pcall(UpdatePlayerInfo)
-			end
-		end))
+		Section:Label("Username: " .. Player.Name, "")
+		Section:Label("UserId: " .. Player.UserId, "")
+		Section:Label("Account Age: " .. Player.AccountAge, "")
+		Section:Label("PlaceId: " .. (game.PlaceId or "N/A"), "")
 	end
 
 	Library.GetDataFromLuarmor = function(self, Section)
-		local KeyStatus_Label
-		local KeyExpires_Label
-		local KeyExecutions_Label
-		local KeyNote_Label
+		local Labels = {}
+		local KeyVars = {
+			get = function(var)
+				return getgenv()[var]
+			end,
+			current_key = getgenv().key
+		}
+
+		local WarningFrame = nil
+		local ExpireThreshold = 1800
+		local ClearThreshold = 1800
 
 		local function ToTime(v)
-			if v <= 0 or not v then
-				return "Lifetime"
-			end
+			if not v or v <= 0 then return "Lifetime" end
 
 			local days = math.floor(v / 86400)
 			local hours = math.floor((v % 86400) / 3600)
@@ -1307,70 +1304,111 @@ local Library do
 		end
 
 		local function UpdateKeyInfo()
-			local key = getgenv().key
-
-			if not key or key == "" then return end
-
-			local expire = getgenv().key_expire
+			local expire = KeyVars.get("key_expire")
 
 			if expire and expire > 0 then
 				local remaining = expire - os.time()
 
 				if remaining > 0 then
-					KeyExpires_Label:SetText("Expires: " .. ToTime(remaining))
+					Labels.Expires:SetText("Expires: " .. ToTime(remaining))
 				else
 					Players.LocalPlayer:Kick("Your key has expired.")
 				end
 			else
-				KeyExpires_Label:SetText("Expires: Lifetime")
+				Labels.Expires:SetText("Expires: Lifetime")
 			end
 
-			local note = getgenv().key_note
-			KeyNote_Label:SetText("Note: " .. (note and note ~= "" and tostring(note) or "None"))
+			local note = KeyVars.get("key_note")
+			Labels.Note:SetText("Note: " .. (note and note ~= "" and tostring(note) or "None"))
 
-			local exec = getgenv().key_executions
-			KeyExecutions_Label:SetText("Executions: " .. tostring(exec or 0))
+			local exec = KeyVars.get("key_executions")
+			Labels.Executions:SetText("Executions: " .. tostring(exec or 0))
+		end
+
+		local function ShowKeyWarning()
+			if WarningFrame and WarningFrame.Instance then return end
+
+			WarningFrame = Instances:Create("ImageLabel", {
+				Parent = Library.Holder.Instance,
+				Name = "\0",
+				Size = UDim2New(0, 300, 0, 300),
+				Position = UDim2New(0.5, 0, 0.5, 0),
+				AnchorPoint = Vector2New(0.5, 0.5),
+				BackgroundColor3 = FromRGB(30, 30, 30),
+				BorderSizePixel = 0,
+				Image = "rbxassetid://75498856718303",
+				ImageTransparency = 0,
+				ZIndex = 9999
+			})
+
+			Instances:Create("UICorner", {
+				Parent = WarningFrame.Instance,
+				CornerRadius = UDimNew(0, 8)
+			})
+		end
+
+		local function HideKeyWarning()
+			if WarningFrame and WarningFrame.Instance then
+				WarningFrame.Instance:Destroy()
+				WarningFrame = nil
+			end
 		end
 
 		local function RefreshKeyFromAPI()
-			local key = getgenv().key
-			local api = getgenv().luarmor_api
+			local key = KeyVars.get("key")
+			local api = KeyVars.get("luarmor_api")
 
-			if not key or key == "" or not api then return end
+			if not key or key == "" or not api then
+				HideKeyWarning()
+				return
+			end
 
 			local Success, Result = pcall(api.check_key, key)
 
-			if Success and Result.code == "KEY_VALID" then
+			if Success and Result and Result.code == "KEY_VALID" then
 				getgenv().key_expire = Result.data.auth_expire
 				getgenv().key_note = Result.data.note
 				getgenv().key_executions = Result.data.total_executions or 0
-			end
 
-			UpdateKeyInfo()
+				UpdateKeyInfo()
+
+				local expire = KeyVars.get("key_expire")
+				if expire and expire > 0 then
+					local remaining = expire - os.time()
+
+					if remaining > 0 and remaining <= ExpireThreshold then
+						ShowKeyWarning()
+					elseif remaining > ExpireThreshold then
+						HideKeyWarning()
+					end
+				elseif expire and expire == 0 then
+					HideKeyWarning()
+				end
+			end
 		end
 
-		local current_key = getgenv().key
+		local function InitLabels(v)
+			if v then
+				local expire = KeyVars.get("key_expire")
+				local Text = (expire and expire > 0) and ToTime(expire - os.time()) or "Lifetime"
 
-		if current_key and current_key ~= "" then
-			local expire = getgenv().key_expire
-
-			KeyStatus_Label = Section:Label("Status: Active", "")
-
-			if expire and expire > 0 then
-				local remaining = expire - os.time()
-				KeyExpires_Label = Section:Label("Expires: " .. ToTime(remaining), "")
+				Labels = {
+					Status = Section:Label("Status: Active", ""),
+					Expires = Section:Label("Expires: " .. Text, ""),
+					Executions = Section:Label("Executions: " .. tostring(KeyVars.get("key_executions") or 0), ""),
+					Note = Section:Label("Note: " .. (KeyVars.get("key_note") or "None"), "")
+				}
 			else
-				KeyExpires_Label = Section:Label("Expires: Lifetime", "")
+				Labels = {
+					Status = Section:Label("Status: No Key", ""),
+					Expires = Section:Label("Expires: N/A", ""),
+					Executions = Section:Label("Executions: N/A", ""),
+					Note = Section:Label("Note: N/A", "")
+				}
 			end
-
-			KeyExecutions_Label = Section:Label("Executions: " .. tostring(getgenv().key_executions or 0), "")
-			KeyNote_Label = Section:Label("Note: " .. (getgenv().key_note or "None"), "")
-		else
-			KeyStatus_Label = Section:Label("Status: No Key", "")
-			KeyExpires_Label = Section:Label("Expires: N/A", "")
-			KeyExecutions_Label = Section:Label("Executions: N/A", "")
-			KeyNote_Label = Section:Label("Note: N/A", "")
 		end
+
+		InitLabels(KeyVars.current_key and KeyVars.current_key ~= "")
 
 		Library:Thread(LPH_NO_VIRTUALIZE(function()
 			while wait(1) do
@@ -4053,15 +4091,57 @@ local Library do
 		wait()
 		Library.NotifLayoutOrder = (Library.NotifLayoutOrder or 0) + 1
 
+		local TitleText = Data.Title or Data.Name or ""
+		local DescText = Data.Description or ""
+
+		local PaddingH = 6
+		local PaddingV = 5
+		local Gap = 5
+		local BarGap = 4
+		local BarH = 3
+		local MaxWidth = 280
+
+		local function GetTextSize(Text, FontSize, Width)
+			local Success, Result = pcall(function()
+				return TextService:GetTextSize(Text, FontSize, Library.Font, Vector2.new(Width, 10000))
+			end)
+
+			if not Success or not Result then
+				Success, Result = pcall(function()
+					return TextService:GetTextSize(Text, FontSize, Enum.Font.Gotham, Vector2.new(Width, 10000))
+				end)
+			end
+
+			if not Success or not Result then
+				Success, Result = pcall(function()
+					return TextService:GetTextSize(Text, FontSize, Enum.Font.SourceSans, Vector2.new(Width, 10000))
+				end)
+			end
+
+			return Result or Vector2.new(Width, FontSize)
+		end
+
+		local TitleSize = GetTextSize(TitleText, 14, MaxWidth)
+		local DescSize = DescText ~= "" and GetTextSize(DescText, 12, MaxWidth) or Vector2.new(0, 0)
+
+		local TitleH = math.max(math.ceil(TitleSize.Y), 15)
+		local DescH = math.max(math.ceil(DescSize.Y), 14)
+
+		if DescH < 28 then DescH = 28 end
+
+		local ContentWidth = math.max(math.ceil(TitleSize.X), math.ceil(DescSize.X))
+		ContentWidth = math.min(ContentWidth, MaxWidth)
+
+		local SizeY = PaddingV + TitleH + Gap + DescH + BarGap + BarH + PaddingV
+
 		local Items = { } do
 			Items["Notification"] = Instances:Create("Frame", {
 				Parent = Library.NotifHolder.Instance,
 				Name = "\0",
 				BackgroundColor3 = Library.Theme["Background"],
-				BackgroundTransparency = 0.30000001192092896,
+				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
 				BorderSizePixel = 0,
-				AutomaticSize = Enum.AutomaticSize.None,
 				LayoutOrder = Library.NotifLayoutOrder
 			}):AddToTheme({BackgroundColor3 = 'Background'})
 
@@ -4074,51 +4154,64 @@ local Library do
 			Instances:Create("UIPadding", {
 				Parent = Items["Notification"].Instance,
 				Name = "\0",
-				PaddingLeft = UDimNew(0, 6),
-				PaddingRight = UDimNew(0, 6),
-				PaddingTop = UDimNew(0, 5),
-				PaddingBottom = UDimNew(0, 5)
+				PaddingLeft = UDimNew(0, PaddingH),
+				PaddingRight = UDimNew(0, PaddingH),
+				PaddingTop = UDimNew(0, PaddingV),
+				PaddingBottom = UDimNew(0, PaddingV)
 			})
 
 			Items["Title"] = Instances:Create("TextLabel", {
 				Parent = Items["Notification"].Instance,
 				Name = "\0",
-				Size = UDim2New(0, 0, 0, 15),
+				Size = UDim2New(1, 0, 0, TitleH),
 				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
 				BorderSizePixel = 0,
-				Text = Data.Title or Data.Name,
+				Text = TitleText,
 				TextColor3 = Library.Theme["Text"],
 				TextSize = 14,
 				FontFace = Library.Font,
 				TextXAlignment = Enum.TextXAlignment.Left,
-				AutomaticSize = Enum.AutomaticSize.XY
+				TextYAlignment = Enum.TextYAlignment.Top,
+				TextWrapped = true,
+				TextTransparency = 1
 			}):AddToTheme({TextColor3 = 'Text'})
 
 			Items["Description"] = Instances:Create("TextLabel", {
 				Parent = Items["Notification"].Instance,
 				Name = "\0",
-				Size = UDim2New(0, 0, 0, 0),
-				Position = UDim2New(0, 0, 0, 20),
+				Size = UDim2New(1, 0, 0, DescH),
+				Position = UDim2New(0, 0, 0, TitleH + Gap),
 				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
 				BorderSizePixel = 0,
-				Text = Data.Description,
+				Text = DescText,
 				TextColor3 = Library.Theme["Text"],
 				TextSize = 12,
 				FontFace = Library.Font,
-				TextTransparency = 0.4000000059604645,
+				TextTransparency = 1,
 				TextXAlignment = Enum.TextXAlignment.Left,
+				TextYAlignment = Enum.TextYAlignment.Top,
 				TextWrapped = true,
-				AutomaticSize = Enum.AutomaticSize.Y
+				TextTruncate = Enum.TextTruncate.None,
+				RichText = false,
+				TextScaled = false
 			}):AddToTheme({TextColor3 = 'Text'})
+
+			Instances:Create("UITextSizeConstraint", {
+				Parent = Items["Description"].Instance,
+				Name = "\0",
+				MinTextSize = 12,
+				MaxTextSize = 12
+			})
 
 			Items["Duration"] = Instances:Create("Frame", {
 				Parent = Items["Notification"].Instance,
 				Name = "\0",
-				Size = UDim2New(1, 0, 0, 3),
-				Position = UDim2New(0, 0, 0, 40),
+				Size = UDim2New(1, 0, 0, BarH),
+				Position = UDim2New(0, 0, 0, TitleH + Gap + DescH + BarGap),
 				BackgroundColor3 = Library.Theme["Inline"],
+				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
 				BorderSizePixel = 0
 			}):AddToTheme({BackgroundColor3 = 'Inline'})
@@ -4142,62 +4235,32 @@ local Library do
 				Parent = Items["Accent"].Instance,
 				Name = "\0",
 				CornerRadius = UDimNew(0, 5)
-			})                
+			})
 		end
 
-		wait()
-
-		local function GetTextSize(text, width)
-			local Success, Result = pcall(function()
-				return TextService:GetTextSize(text, 14, Library.Font, Vector2.new(width, 10000))
-			end)
-			if not Success or not Result then
-				Result = TextService:GetTextSize(text, 14, Enum.Font.SourceSans, Vector2.new(width, 10000))
-			end
-
-			return Result
-		end
-
-		local Content = GetTextSize(Data.Description or "", 10000).X
-		local Description = math.max(math.ceil(GetTextSize(Data.Description or "", Content).Y), 14)
-		local Title = math.ceil(Items["Title"].Instance.TextBounds.X)
-		local Final = math.max(Title, Content)
-
-		local SizeY = 5 + 20 + Description + 4 + 3 + 5
-
-		Items["Description"].Instance.Size = UDim2New(0, Final, 0, 0)
-		Items["Duration"].Instance.Position = UDim2New(0, 0, 0, 5 + 20 + Description + 4)
 		Items["Notification"].Instance.Size = UDim2New(0, 0, 0, SizeY)
-
-		for Index, Value in Items do 
-			if Value.Instance:IsA("Frame") then
-				Value.Instance.BackgroundTransparency = 1
-			elseif Value.Instance:IsA("TextLabel") then 
-				Value.Instance.TextTransparency = 1
-			end
-		end 
 
 		local Info = TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out, 0, false, 0)
 
 		Library:Thread(function()
-			for Index, Value in Items do 
+			for Index, Value in Items do
 				if Value.Instance:IsA("Frame") then
 					Value:Tween(Info, {BackgroundTransparency = 0})
-				elseif Value.Instance:IsA("TextLabel") and Index ~= "Description" then 
+				elseif Value.Instance:IsA("TextLabel") and Index ~= "Description" then
 					Value:Tween(Info, {TextTransparency = 0})
-				elseif Value.Instance:IsA("TextLabel") and Index == "Description" then 
+				elseif Value.Instance:IsA("TextLabel") and Index == "Description" then
 					Value:Tween(Info, {TextTransparency = 0.4})
 				end
 			end
 
-			Items["Notification"]:Tween(Info, {Size = UDim2New(0, Final, 0, SizeY)})
+			Items["Notification"]:Tween(Info, {Size = UDim2New(0, ContentWidth, 0, SizeY)})
 			Items["Accent"]:Tween(TweenInfo.new(Data.Duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2New(0, 0, 1, 0)})
 
 			delay(Data.Duration + 0.1, function()
-				for Index, Value in Items do 
+				for Index, Value in Items do
 					if Value.Instance:IsA("Frame") then
 						Value:Tween(nil, {BackgroundTransparency = 1})
-					elseif Value.Instance:IsA("TextLabel") then 
+					elseif Value.Instance:IsA("TextLabel") then
 						Value:Tween(nil, {TextTransparency = 1})
 					end
 				end
@@ -4954,16 +5017,20 @@ local Library do
 	Library.Pages.Section = function(self, Data)
 		Data = Data or { }
 
+		local CollapsedDefault = true
+		if Data.Collapsed == false then
+			CollapsedDefault = false
+		end
+
 		local Section = {
 			Window = self.Window,
 			Page = self,
 
 			Name = Data.Name or Data.name or "Section",
 			Side = Data.Side or Data.side or 1,
-			DefaultCollapsed = Data.DefaultCollapsed or Data.defaultcollapsed or true,
+			Collapsed = CollapsedDefault,
 
-			Items = { },
-			Collapsed = true,
+			Items = { }
 		}
 
 		local Items = { }
@@ -5132,7 +5199,7 @@ local Library do
 		end)
 
 		Section.Items = Items
-		Section.Collapsed = Section.DefaultCollapsed
+		Section.Collapsed = Section.Collapsed
 		Section:SetCollapsed(Section.Collapsed)
 
 		table.insert(Library.AllSections, Section)
