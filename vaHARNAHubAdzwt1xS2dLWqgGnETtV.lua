@@ -149,11 +149,11 @@ local Library do
 	end 
 
 	Library = {
-		Theme =  { },
+		Theme =  {},
 
 		MenuKeybind = tostring(Enum.KeyCode.RightControl), 
 
-		Flags = { },
+		Flags = {},
 
 		Tween = {
 			Time = 0.3,
@@ -172,26 +172,26 @@ local Library do
 			Themes = "solixhub/Themes"
 		},
 
-		Pages = { },
-		Sections = { },
+		Pages = {},
+		Sections = {},
 
-		Windows = { },
-		AllSections = { },
+		Windows = {},
+		AllSections = {},
 
-		SearchItems = { },
+		SearchItems = {},
 		CurrentPage = nil,
 
-		Connections = { },
-		Threads = { },
+		Connections = {},
+		Threads = {},
 
-		ThemeMap = { },
-		ThemeItems = { },
+		ThemeMap = {},
+		ThemeItems = {},
 
-		OpenFrames = { },
+		OpenFrames = {},
 
-		SliderElements = { },
-		TextboxElements = { },
-		SectionElements = { },
+		SliderElements = {},
+		TextboxElements = {},
+		SectionElements = {},
 
 		HideOnOverlap = function(self, IsOpen, OptionHolder)
 			if not IsOpen then
@@ -218,8 +218,8 @@ local Library do
 			end
 		end,
 
-		SetFlags = { },
-		Themes = { },
+		SetFlags = {},
+		Themes = {},
 
 		UnnamedConnections = 0,
 		UnnamedFlags = 0,
@@ -535,7 +535,7 @@ local Library do
 		makefolder(GameConfigFolder)
 	end
 
-	local Tween = { } do
+	local Tween = {} do
 		Tween.__index = Tween
 
 		Tween.Create = function(self, Item, Info, Goal, IsRawItem)
@@ -561,19 +561,19 @@ local Library do
 		end
 
 		Tween.GetProperty = function(self, Item)
-			Item = Item or self.Item 
+			local className = Item.ClassName
 
-			if Item:IsA("Frame") then
+			if className == "Frame" then
 				return { "BackgroundTransparency" }
-			elseif Item:IsA("TextLabel") or Item:IsA("TextButton") then
+			elseif className == "TextLabel" or className == "TextButton" then
 				return { "TextTransparency", "BackgroundTransparency" }
-			elseif Item:IsA("ImageLabel") or Item:IsA("ImageButton") then
+			elseif className == "ImageLabel" or className == "ImageButton" then
 				return { "BackgroundTransparency", "ImageTransparency" }
-			elseif Item:IsA("ScrollingFrame") then
+			elseif className == "ScrollingFrame" then
 				return { "BackgroundTransparency", "ScrollBarImageTransparency" }
-			elseif Item:IsA("TextBox") then
+			elseif className == "TextBox" then
 				return { "TextTransparency", "BackgroundTransparency" }
-			elseif Item:IsA("UIStroke") then 
+			elseif className == "UIStroke" then
 				return { "Transparency" }
 			end
 		end
@@ -625,16 +625,16 @@ local Library do
 		end
 
 		Tween.Clean = function(self)
-			if not self.Tween then 
+			if not self.Tween then
 				return
 			end
 
-			Tween:Pause()
+			self.Tween:Pause()
 			self = nil
 		end
 	end
 
-	local Instances = { } do
+	local Instances = {} do
 		Instances.__index = Instances
 
 		Instances.Create = function(self, Class, Properties)
@@ -704,13 +704,12 @@ local Library do
 			return Library:Connect(self.Instance[Event], Callback, Name)
 		end
 
-		Instances.Set = function(self, Instance, Property, Value)
-			if not self.Instance then 
+		Instances.Set = function(self, Property, Value)
+			if not self.Instance then
 				return
 			end
 
-			Instance[Property] = Value
-
+			self.Instance[Property] = Value
 			return self
 		end
 
@@ -859,32 +858,33 @@ local Library do
 			}
 
 			local BeginResizing = function(Side)
-				Resizing = true 
-				CurrentSide = Side 
+				Resizing = true
+				CurrentSide = Side
 
 				StartMouse = UserInputService:GetMouseLocation()
 
 				StartPosition = Vector2New(Gui.Position.X.Offset, Gui.Position.Y.Offset)
 				StartSize = Vector2New(Gui.Size.X.Offset, Gui.Size.Y.Offset)
 
-				for Index, Value in Edges do 
-					Value.Button.Instance.BackgroundTransparency = (Value.Side == Side) and 0 or 1
+				for _, Edge in Edges do
+					Edge.Button.Instance.BackgroundTransparency = Edge.Side == Side and 0 or 1
 				end
 			end
 
 			local EndResizing = function()
-				Resizing = false 
+				Resizing = false
 				CurrentSide = nil
 
-				for Index, Value in Edges do 
-					Value.Button.Instance.BackgroundTransparency = 1
+				for _, Edge in Edges do
+					Edge.Button.Instance.BackgroundTransparency = 1
 				end
 			end
 
-			for Index, Value in Edges do 
-				Value.Button:Connect("InputBegan", function(Input)
+			for _, Edge in Edges do
+				local Side = Edge.Side
+				Edge.Button:Connect("InputBegan", function(Input)
 					if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-						BeginResizing(Value.Side)
+						BeginResizing(Side)
 					end
 				end)
 			end
@@ -898,7 +898,7 @@ local Library do
 			end)
 
 			Library:Connect(RunService.RenderStepped, function()
-				if not Resizing or not CurrentSide then 
+				if not Resizing or not CurrentSide then
 					return
 				end
 
@@ -928,6 +928,7 @@ local Library do
 					end
 					SizeX = Minimum.X
 				end
+
 				if SizeY < Minimum.Y then
 					if CurrentSide == "T" then
 						PostionY = PostionY - (Minimum.Y - SizeY)
@@ -971,7 +972,7 @@ local Library do
 			local RenderStepped
 			local Scale = Library.UIScaleNum or 1
 
-			local Items = { } do
+			local Items = {} do
 				Items["Tooltip"] = Instances:Create("Frame", {
 					Parent = Library.Holder.Instance,
 					Name = "\0",
@@ -1046,7 +1047,7 @@ local Library do
 		end
 	end
 
-	local CustomFont = { } do
+	local CustomFont = {} do
 		function CustomFont:New(Name, Weight, Style, Data)
 			if not isfile(Data.Id) then
 				writefile(Data.Id, game:HttpGet(Data.Url))
@@ -1145,16 +1146,17 @@ local Library do
 
 		self.UIScaleScreenPercent = Percent
 
-		local Viewport = ViewportSize()
 		local DesignWidth, DesignHeight = self.UIScaleDesignSize.X, self.UIScaleDesignSize.Y
-
 		local Scale
 
 		if IsMobile then
+			local Viewport = ViewportSize()
+
 			Scale = Viewport.Y / 450
 			Scale = Scale * Percent
 			Scale = MathClamp(Scale, 0.8, 2.5)
 		else
+			local Viewport = ViewportSize()
 			local TargetWidth = math.min(DesignWidth, Viewport.X * Percent)
 			local TargetHeight = math.min(DesignHeight, Viewport.Y * Percent)
 
@@ -1282,24 +1284,34 @@ local Library do
 
 		local WarningFrame = nil
 		local ExpireThreshold = 1800
-		local ClearThreshold = 1800
 
-		local function ToTime(v)
-			if not v or v <= 0 then return "Lifetime" end
+		local ToTime do
+			local UnitMultipliers = {
+				{86400, "%dd %dh %dm %ds"},
+				{3600, "%dh %dm %ds"},
+				{60, "%dm %ds"},
+				{1, "%ds"}
+			}
 
-			local days = math.floor(v / 86400)
-			local hours = math.floor((v % 86400) / 3600)
-			local minutes = math.floor((v % 3600) / 60)
-			local seconds = v % 60
+			function ToTime(v)
+				if not v or v <= 0 then
+					return "Lifetime"
+				end
 
-			if days > 0 then
-				return string.format("%dd %dh %dm %ds", days, hours, minutes, seconds)
-			elseif hours > 0 then
-				return string.format("%dh %dm %ds", hours, minutes, seconds)
-			elseif minutes > 0 then
-				return string.format("%dm %ds", minutes, seconds)
-			else
-				return string.format("%ds", seconds)
+				local days = MathFloor(v / 86400)
+				local hours = MathFloor((v % 86400) / 3600)
+				local minutes = MathFloor((v % 3600) / 60)
+				local seconds = v % 60
+
+				if days > 0 then
+					return StringFormat("%dd %dh %dm %ds", days, hours, minutes, seconds)
+				elseif hours > 0 then
+					return StringFormat("%dh %dm %ds", hours, minutes, seconds)
+				elseif minutes > 0 then
+					return StringFormat("%dm %ds", minutes, seconds)
+				else
+					return StringFormat("%ds", seconds)
+				end
 			end
 		end
 
@@ -1318,15 +1330,14 @@ local Library do
 				Labels.Expires:SetText("Expires: Lifetime")
 			end
 
-			local note = KeyVars.get("key_note")
-			Labels.Note:SetText("Note: " .. (note and note ~= "" and tostring(note) or "None"))
-
-			local exec = KeyVars.get("key_executions")
-			Labels.Executions:SetText("Executions: " .. tostring(exec or 0))
+			Labels.Note:SetText("Note: " .. (KeyVars.get("key_note") or "None"))
+			Labels.Executions:SetText("Executions: " .. tostring(KeyVars.get("key_executions") or 0))
 		end
 
 		local function ShowKeyWarning()
-			if WarningFrame and WarningFrame.Instance then return end
+			if WarningFrame and WarningFrame.Instance then
+				return
+			end
 
 			WarningFrame = Instances:Create("ImageLabel", {
 				Parent = Library.Holder.Instance,
@@ -1358,7 +1369,7 @@ local Library do
 				RichText = false,
 				Size = UDim2New(1, -20, 0, 40),
 				Text = "Son, your key is expiring soon",
-				TextColor3 = Color3.fromRGB(255, 255, 255),
+				TextColor3 = FromRGB(255, 255, 255),
 				TextSize = 14,
 				TextTruncate = Enum.TextTruncate.None,
 				TextWrapped = true,
@@ -1386,13 +1397,16 @@ local Library do
 			local Success, Result = pcall(api.check_key, key)
 
 			if Success and Result and Result.code == "KEY_VALID" then
-				getgenv().key_expire = Result.data.auth_expire
-				getgenv().key_note = Result.data.note
-				getgenv().key_executions = Result.data.total_executions or 0
+				local data = Result.data
+
+				getgenv().key_expire = data.auth_expire
+				getgenv().key_note = data.note
+				getgenv().key_executions = data.total_executions or 0
 
 				UpdateKeyInfo()
 
-				local expire = KeyVars.get("key_expire")
+				local expire = data.auth_expire
+
 				if expire and expire > 0 then
 					local remaining = expire - os.time()
 
@@ -1401,7 +1415,7 @@ local Library do
 					elseif remaining > ExpireThreshold then
 						HideKeyWarning()
 					end
-				elseif expire and expire == 0 then
+				elseif expire == 0 then
 					HideKeyWarning()
 				end
 			end
@@ -1428,16 +1442,19 @@ local Library do
 			end
 		end
 
-		InitLabels(KeyVars.current_key and KeyVars.current_key ~= "")
+		local HasKey = KeyVars.current_key and KeyVars.current_key ~= ""
+		InitLabels(HasKey)
 
 		Library:Thread(LPH_NO_VIRTUALIZE(function()
-			while wait(1) do
+			while true do
+				wait(1)
 				pcall(UpdateKeyInfo)
 			end
 		end))
 
 		Library:Thread(LPH_NO_VIRTUALIZE(function()
-			while wait(30) do
+			while true do
+				wait(30)
 				pcall(RefreshKeyFromAPI)
 			end
 		end))
@@ -1539,6 +1556,7 @@ local Library do
 
 		for Property, Value in ThemeData.Properties do
 			if type(Value) == "string" then
+
 				if not self.Theme[Value] then
 					Item[Property] = Value 
 				end
@@ -1558,7 +1576,7 @@ local Library do
 	end
 
 	Library.GetConfig = function(self)
-		local Config = { } 
+		local Config = {} 
 
 		local Success, Result = Library:SafeCall(function()
 			for Index, Value in Library.Flags do 
@@ -1623,8 +1641,8 @@ local Library do
 	end
 
 	Library.RefreshConfigsList = function(self, Element)
-		local List = { }
-		local ReturnList = { }
+		local List = {}
+		local ReturnList = {}
 
 		List = listfiles(Library:GetFolder())
 
@@ -1652,7 +1670,7 @@ local Library do
 	end
 
 	Library.GetTheme = function(self)
-		local Config = { } 
+		local Config = {} 
 
 		local Success, Result = Library:SafeCall(function()
 			for Index, Value in Library.Flags do 
@@ -1686,8 +1704,8 @@ local Library do
 	end
 
 	Library.RefreshThemeList = function(self, Element)
-		local List = { }
-		local ReturnList = { }
+		local List = {}
+		local ReturnList = {}
 
 		List = listfiles(GetFolders().Themes)
 
@@ -1753,7 +1771,7 @@ local Library do
 	end
 
 	Library.CompareVectors = function(self, PointA, PointB)
-		return (PointA.X < PointB.X) or (PointA.Y < PointB.Y)
+		return (PointA.X < PointB.X) and (PointA.Y < PointB.Y)
 	end
 
 	Library.IsClipped = function(self, Object, Column)
@@ -1817,7 +1835,7 @@ local Library do
 	end
 
 	Library.Sections.Toggle = function(self, Data)
-		Data = Data or { }
+		Data = Data or {}
 
 		local Toggle = {
 			Window = self.Window,
@@ -1835,11 +1853,11 @@ local Library do
 			Disabled = false,
 		}
 
-		local Items = { } do 
+		local Items = {} do 
 			Items["Toggle"] = Instances:Create("TextButton", {
 				Parent = Toggle.Section.Items["Content"].Instance,
 				Name = "\0",
-				Size = UDim2New(1, 0, 0, Toggle.Description ~= "" and 40 or 20),
+				Size = UDim2New(1, 0, 0, Toggle.Description and Toggle.Description ~= "" and 40 or 20),
 				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
 				BorderSizePixel = 0,
@@ -1871,7 +1889,7 @@ local Library do
 				ZIndex = 2
 			}):AddToTheme({TextColor3 = 'Text'})
 
-			if Toggle.Description ~= "" then
+			if Toggle.Description and Toggle.Description ~= "" then
 				Items["Description"] = Instances:Create("TextLabel", {
 					Parent = Items["Toggle"].Instance,
 					Name = "\0",
@@ -1964,38 +1982,27 @@ local Library do
 		end
 
 		function Toggle:Set(Value)
-			if Toggle.Disabled then 
-				return 
+			if Toggle.Disabled then
+				return
 			end
 
-			Toggle.Value = Value 
-			Library.Flags[Toggle.Flag] = Value 
+			Toggle.Value = Value
+			Library.Flags[Toggle.Flag] = Value
 
-			if Toggle.Value then 
-				Items["Text"]:Tween(nil, {TextTransparency = 0})
+			local ThemeKey = Value and "Accent" or "Element"
+			local TextTrans = Value and 0 or 0.4
+			local CircleTrans = Value and 0 or 0.4
 
-				Items["Circle"]:Tween(TweenInfo.new(Library.Tween.Time + 0.2, Enum.EasingStyle.Quart, Library.Tween.Direction), {
-					AnchorPoint = Vector2New(1, 0),
-					Position = UDim2New(1, -3, 0, 3),
-					BackgroundTransparency = 0,
-				})
+			Items["Text"]:Tween(nil, {TextTransparency = TextTrans})
+			Items["Circle"]:Tween(TweenInfo.new(Library.Tween.Time + 0.2, Enum.EasingStyle.Quart, Library.Tween.Direction), {
+				AnchorPoint = Value and Vector2New(1, 0) or Vector2New(0, 0),
+				Position = Value and UDim2New(1, -3, 0, 3) or UDim2New(0, 3, 0, 3),
+				BackgroundTransparency = CircleTrans,
+			})
+			Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = ThemeKey})
+			Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme[ThemeKey]})
 
-				Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
-				Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
-			else
-				Items["Text"]:Tween(nil, {TextTransparency = 0.4})
-
-				Items["Circle"]:Tween(TweenInfo.new(Library.Tween.Time + 0.2, Enum.EasingStyle.Quart, Library.Tween.Direction), {
-					AnchorPoint = Vector2New(0, 0),
-					Position = UDim2New(0, 3, 0, 3),
-					BackgroundTransparency = 0.4,
-				})
-
-				Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
-				Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
-			end
-
-			if Toggle.Callback then 
+			if Toggle.Callback then
 				Library:SafeCall(Toggle.Callback, Toggle.Value)
 			end
 
@@ -2005,21 +2012,13 @@ local Library do
 		function Toggle:SetDisabled(Bool)
 			Toggle.Disabled = Bool
 
-			if Toggle.Disabled then
-				Items["Text"]:Tween(nil, {TextTransparency = 0.6})
-				Items["Indicator"]:Tween(nil, {BackgroundTransparency = 0.6})
-				Items["Circle"]:Tween(nil, {BackgroundTransparency = 0.6})
-			else
-				if Toggle.Value then
-					Items["Text"]:Tween(nil, {TextTransparency = 0})
-					Items["Circle"]:Tween(nil, {BackgroundTransparency = 0})
-					Items["Indicator"]:Tween(nil, {BackgroundTransparency = 0})
-				else
-					Items["Text"]:Tween(nil, {TextTransparency = 0.4})
-					Items["Indicator"]:Tween(nil, {BackgroundTransparency = 0})
-					Items["Circle"]:Tween(nil, {BackgroundTransparency = 0.4})
-				end
-			end
+			local TextTrans = Bool and 0.6 or (Toggle.Value and 0 or 0.4)
+			local CircleTrans = Bool and 0.6 or (Toggle.Value and 0 or 0.4)
+			local IndicatorTrans = Bool and 0.6 or 0
+
+			Items["Text"]:Tween(nil, {TextTransparency = TextTrans})
+			Items["Circle"]:Tween(nil, {BackgroundTransparency = CircleTrans})
+			Items["Indicator"]:Tween(nil, {BackgroundTransparency = IndicatorTrans})
 		end
 
 		function Toggle:SetVisibility(Bool)
@@ -2027,7 +2026,7 @@ local Library do
 		end
 
 		function Toggle:Colorpicker(Data)
-			Data = Data or { }
+			Data = Data or {}
 
 			local Colorpicker = {
 				Window = Toggle.Window,
@@ -2054,7 +2053,7 @@ local Library do
 		end
 
 		function Toggle:Keybind(Data)
-			Data = Data or { }
+			Data = Data or {}
 
 			local Keybind = {
 				Window = Toggle.Window,
@@ -2140,7 +2139,7 @@ local Library do
 			IsOpen = false
 		}
 
-		local Items = { } do 
+		local Items = {} do 
 			Items["ColorpickerButton"] = Instances:Create("TextButton", {
 				Parent = Data.Parent.Instance,
 				Name = "\0",
@@ -2444,7 +2443,7 @@ local Library do
 			Multi = true,
 			Callback = function() end,
 			Flag = Colorpicker.Flag .. " Animation",
-			Options = { },
+			Options = {},
 			MaxSize = 280,
 		}
 
@@ -2649,7 +2648,9 @@ local Library do
 
 			if AnimDropdown.IsOpen then
 				Items["OptionHolder"].Instance.Parent = Library.Holder.Instance
+
 				UpdateColorpickerPosition()
+
 				Items["OptionHolder"].Instance.Visible = true
 
 				RenderStepped = RunService.RenderStepped:Connect(function()
@@ -2702,6 +2703,7 @@ local Library do
 
 			if not NewTween or not NewTween.Tween then
 				Debounce = false
+
 				Items["OptionHolder"].Instance.Visible = AnimDropdown.IsOpen
 				wait(0.2)
 				Items["OptionHolder"].Instance.Parent = not AnimDropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
@@ -2710,6 +2712,7 @@ local Library do
 
 			NewTween.Tween.Completed:Connect(function()
 				Debounce = false
+
 				Items["OptionHolder"].Instance.Visible = AnimDropdown.IsOpen
 				wait(0.2)
 				Items["OptionHolder"].Instance.Parent = not AnimDropdown.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
@@ -2976,18 +2979,20 @@ local Library do
 				Transparency = 1 - Colorpicker.Alpha
 			}
 
-			local Red, Green, Blue = MathFloor(Colorpicker.Color.R * 255), MathFloor(Colorpicker.Color.G * 255), MathFloor(Colorpicker.Color.B * 255)
-			Items["Input"].Instance.Text = Red .. ", " .. Green .. ", " .. Blue
+			local Color = Colorpicker.Color
+			local R, G, B = MathFloor(Color.R * 255), MathFloor(Color.G * 255), MathFloor(Color.B * 255)
 
-			Items["ColorpickerButton"]:Tween(nil, {BackgroundColor3 = Colorpicker.Color})
+			Items["Input"].Instance.Text = R .. ", " .. G .. ", " .. B
+
+			Items["ColorpickerButton"]:Tween(nil, {BackgroundColor3 = Color})
 			Items["Palette"]:Tween(nil, {BackgroundColor3 = FromHSV(Hue, 1, 1)})
 
-			if not IsFromAlpha then 
-				Items["Alpha"]:Tween(nil, {BackgroundColor3 = Colorpicker.Color})
+			if not IsFromAlpha then
+				Items["Alpha"]:Tween(nil, {BackgroundColor3 = Color})
 			end
 
-			if Data.Callback then 
-				Library:SafeCall(Data.Callback, Colorpicker.Color, Colorpicker.Alpha)
+			if Data.Callback then
+				Library:SafeCall(Data.Callback, Color, Colorpicker.Alpha)
 			end
 
 			Library:SaveAutoloadIfEnabled()
@@ -3001,16 +3006,21 @@ local Library do
 				return
 			end
 
-			local ValueX = MathClamp(1 - (Input.Position.X - Items["Palette"].Instance.AbsolutePosition.X) / Items["Palette"].Instance.AbsoluteSize.X, 0, 1)
-			local ValueY = MathClamp(1 - (Input.Position.Y - Items["Palette"].Instance.AbsolutePosition.Y) / Items["Palette"].Instance.AbsoluteSize.Y, 0, 1)
+			local PaletteInst = Items["Palette"].Instance
+			local PaletteSize = PaletteInst.AbsoluteSize
+			local PalettePos = PaletteInst.AbsolutePosition
+			local SlideX = (Input.Position.X - PalettePos.X) / PaletteSize.X
+			local SlideY = (Input.Position.Y - PalettePos.Y) / PaletteSize.Y
+
+			local ValueX = MathClamp(1 - SlideX, 0, 1)
+			local ValueY = MathClamp(1 - SlideY, 0, 1)
 
 			Colorpicker.Saturation = ValueX
 			Colorpicker.Value = ValueY
 
-			local SlideX = MathClamp((Input.Position.X - Items["Palette"].Instance.AbsolutePosition.X) / Items["Palette"].Instance.AbsoluteSize.X, 0, 0.98)
-			local SlideY = MathClamp((Input.Position.Y - Items["Palette"].Instance.AbsolutePosition.Y) / Items["Palette"].Instance.AbsoluteSize.Y, 0, 0.98)
-
-			Items["PaletteDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(SlideX, 0, SlideY, 0)})
+			Items["PaletteDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				Position = UDim2New(MathClamp(SlideX, 0, 0.98), 0, MathClamp(SlideY, 0, 0.98), 0)
+			})
 			Colorpicker:Update()
 		end
 
@@ -3022,17 +3032,20 @@ local Library do
 				return
 			end
 
-			local ValueX = MathClamp((Input.Position.X - Items["Hue"].Instance.AbsolutePosition.X) / Items["Hue"].Instance.AbsoluteSize.X, 0, 1)
+			local HueInst = Items["Hue"].Instance
+			local HueSize = HueInst.AbsoluteSize
+			local HuePos = HueInst.AbsolutePosition
+			local SlideX = (Input.Position.X - HuePos.X) / HueSize.X
 
-			Colorpicker.Hue = ValueX
+			Colorpicker.Hue = MathClamp(SlideX, 0, 1)
 
-			local SlideX = MathClamp((Input.Position.X - Items["Hue"].Instance.AbsolutePosition.X) / Items["Hue"].Instance.AbsoluteSize.X, 0, 0.985)
-
-			Items["HueDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(SlideX, 0, 0.5, 0)})
+			Items["HueDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				Position = UDim2New(MathClamp(SlideX, 0, 0.985), 0, 0.5, 0)
+			})
 			Colorpicker:Update()
 		end
 
-		local SlidingAlpha = false 
+		local SlidingAlpha = false
 		local AlphaChanged
 
 		function Colorpicker:SlideAlpha(Input)
@@ -3040,13 +3053,16 @@ local Library do
 				return
 			end
 
-			local ValueY = MathClamp((Input.Position.Y - Items["Alpha"].Instance.AbsolutePosition.Y) / Items["Alpha"].Instance.AbsoluteSize.Y, 0, 1)
+			local AlphaInst = Items["Alpha"].Instance
+			local AlphaSize = AlphaInst.AbsoluteSize
+			local AlphaPos = AlphaInst.AbsolutePosition
+			local SlideY = (Input.Position.Y - AlphaPos.Y) / AlphaSize.Y
 
-			Colorpicker.Alpha = ValueY
+			Colorpicker.Alpha = MathClamp(SlideY, 0, 1)
 
-			local SlideY = MathClamp((Input.Position.Y - Items["Alpha"].Instance.AbsolutePosition.Y) / Items["Alpha"].Instance.AbsoluteSize.Y, 0, 0.98)
-
-			Items["AlphaDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(0.5, 0, SlideY, 0)})
+			Items["AlphaDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				Position = UDim2New(0.5, 0, MathClamp(SlideY, 0, 0.98), 0)
+			})
 			Colorpicker:Update(true)
 		end
 
@@ -3055,58 +3071,58 @@ local Library do
 				Color = FromRGB(Color[1], Color[2], Color[3])
 			elseif type(Color) == "string" then
 				Color = FromHex(Color)
-			else
-				Color = Color
-			end 
+			end
 
 			Colorpicker.Hue, Colorpicker.Saturation, Colorpicker.Value = Color:ToHSV()
-			Colorpicker.Alpha = Alpha or 0  
+			Colorpicker.Alpha = Alpha or 0
 
 			local PaletteValueX = MathClamp(1 - Colorpicker.Saturation, 0, 0.985)
 			local PaletteValueY = MathClamp(1 - Colorpicker.Value, 0, 0.985)
-
 			local AlphaPositionY = MathClamp(Colorpicker.Alpha, 0, 0.99)
 			local HuePositionX = MathClamp(Colorpicker.Hue, 0, 0.98)
 
-			Items["PaletteDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(PaletteValueX, 0, PaletteValueY, 0)})
-			Items["HueDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(HuePositionX, 0, 0.5, 0)})
-			Items["AlphaDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(0.5, 0, AlphaPositionY, 0)})
+			Items["PaletteDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				Position = UDim2New(PaletteValueX, 0, PaletteValueY, 0)
+			})
+			Items["HueDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				Position = UDim2New(HuePositionX, 0, 0.5, 0)
+			})
+			Items["AlphaDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				Position = UDim2New(0.5, 0, AlphaPositionY, 0)
+			})
 			Colorpicker:Update()
 		end
 
-		local OldAlpha = Colorpicker.Alpha
-		local OldColor
-
 		AnimDropdown.Callback = function(Value)
-			if TableFind(Value, "Rainbow") then 
-				OldColor = Colorpicker.Color
+			local HasRainbow = TableFind(Value, "Rainbow")
+			local HasBreathing = TableFind(Value, "Breathing")
+
+			if HasRainbow then
+				local SavedColor = Colorpicker.Color
 
 				Library:Thread(LPH_NO_VIRTUALIZE(function()
-					while wait(0.07) do 
+					while wait(0.07) do
 						local RainbowHue = MathAbs(MathSin(tick() * 0.33))
-						local Color = FromHSV(RainbowHue, 1, 1)
+						Colorpicker:Set(FromHSV(RainbowHue, 1, 1), Colorpicker.Alpha)
 
-						Colorpicker:Set(Color, Colorpicker.Alpha)
-
-						if not TableFind(Value, "Rainbow") then
-							Colorpicker:Set(OldColor, Colorpicker.Alpha)
+						if not TableFind(AnimDropdown.Value, "Rainbow") then
+							Colorpicker:Set(SavedColor, Colorpicker.Alpha)
 							break
 						end
 					end
 				end))
 			end
 
-			if TableFind(Value, "Breathing") then 
+			if HasBreathing then
+				local SavedAlpha = Colorpicker.Alpha
+
 				Library:Thread(LPH_NO_VIRTUALIZE(function()
-					OldAlpha = Colorpicker.Alpha
-
-					while wait(0.07) do 
+					while wait(0.07) do
 						local AlphaValue = MathAbs(MathSin(tick() * 0.8))
-
 						Colorpicker:Set(Colorpicker.Color, AlphaValue)
 
-						if not TableFind(Value, "Breathing") then
-							Colorpicker:Set(Colorpicker.Color, OldAlpha)
+						if not TableFind(AnimDropdown.Value, "Breathing") then
+							Colorpicker:Set(Colorpicker.Color, SavedAlpha)
 							break
 						end
 					end
@@ -3255,6 +3271,7 @@ local Library do
 			if Colorpicker.Disabled then
 				return
 			end
+
 			Colorpicker:Set(Value, Alpha)
 		end
 
@@ -3262,8 +3279,9 @@ local Library do
 			if type(Value) == "string" then
 				Value = { Value }
 			end
+
 			if type(Value) ~= "table" then
-				Value = { }
+				Value = {}
 			end
 
 			AnimDropdown.Value = Value
@@ -3273,9 +3291,10 @@ local Library do
 			Items["Value"].Instance.Text = TextFormat
 
 			for OptName, OptionData in AnimDropdown.Options do
-				local selected = TableFind(AnimDropdown.Value, OptName)
-				OptionData.Selected = selected ~= nil
-				OptionData:Toggle(selected and "Active" or "Inactive")
+				local Selected = TableFind(AnimDropdown.Value, OptName)
+
+				OptionData.Selected = Selected ~= nil
+				OptionData:Toggle(Selected and "Active" or "Inactive")
 			end
 
 			if AnimDropdown.Callback then
@@ -3289,6 +3308,7 @@ local Library do
 					Item.Instance:Destroy()
 				end
 			end
+
 			return Colorpicker
 		end
 
@@ -3310,7 +3330,7 @@ local Library do
 			IsOpen = false 
 		}
 
-		local Items = { } do 
+		local Items = {} do 
 			Items["KeyButton"] = Instances:Create("TextButton", {
 				Parent = Data.Parent.Instance,
 				Name = "\0",
@@ -3540,11 +3560,11 @@ local Library do
 				Items["KeybindWindow"].Instance.Parent = Library.Holder.Instance
 
 				RenderStepped = RunService.RenderStepped:Connect(function()
-					local btn = Items["KeyButton"].Instance
+					local Button = Items["KeyButton"].Instance
 
 					Items["KeybindWindow"].Instance.Position = UDim2New(
-						0, btn.AbsolutePosition.X,
-						0, btn.AbsolutePosition.Y + btn.AbsoluteSize.Y + 5
+						0, Button.AbsolutePosition.X,
+						0, Button.AbsolutePosition.Y + Button.AbsoluteSize.Y + 5
 					)
 				end)
 
@@ -3593,6 +3613,7 @@ local Library do
 
 			if not NewTween or not NewTween.Tween then
 				Debounce = false
+
 				Items["KeybindWindow"].Instance.Visible = Keybind.IsOpen
 				wait(0.2)
 				Items["KeybindWindow"].Instance.Parent = not Keybind.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
@@ -3601,6 +3622,7 @@ local Library do
 
 			NewTween.Tween.Completed:Connect(function()
 				Debounce = false
+
 				Items["KeybindWindow"].Instance.Visible = Keybind.IsOpen
 				wait(0.2)
 				Items["KeybindWindow"].Instance.Parent = not Keybind.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
@@ -3682,6 +3704,7 @@ local Library do
 				Update()
 			elseif type(Key) == "table" then
 				local RealKey = Key.Key == "Backspace" and "None" or Key.Key
+
 				Keybind.Key = tostring(Key.Key)
 
 				if Key.Mode then
@@ -3730,7 +3753,9 @@ local Library do
 			Items["KeyButton"].Instance.Text = "press a key"
 
 			local InputBegan
+
 			InputBegan = UserInputService.InputBegan:Connect(function(Input)
+
 				if Input.UserInputType == Enum.UserInputType.Keyboard then 
 					Keybind:Set(Input.KeyCode)
 				else
@@ -3858,6 +3883,7 @@ local Library do
 					Item.Instance:Destroy()
 				end
 			end
+
 			return Keybind
 		end
 
@@ -3865,9 +3891,9 @@ local Library do
 	end
 
 	Library.Watermark = function(self, Name)
-		local Watermark = { }
+		local Watermark = {}
 
-		local Items = { } do
+		local Items = {} do
 			Items["Watermark"] = Instances:Create("Frame", {
 				Parent = Library.Holder.Instance,
 				Name = "\0",
@@ -3933,6 +3959,7 @@ local Library do
 			local CenterPosition = Items["Watermark"].Instance.AbsolutePosition
 
 			wait()
+
 			Items["Watermark"].Instance.AnchorPoint = Vector2New(0, 0)
 			Items["Watermark"].Instance.Position = UDim2New(0, CenterPosition.X, 0, CenterPosition.Y)
 		end
@@ -3946,10 +3973,11 @@ local Library do
 	Library.KeybindList = function(self, Name)
 		Name = Name or "Keybinds"
 
-		local KeybindList = { }
+		local KeybindList = {}
+
 		Library.KeyList = KeybindList
 
-		local Items = { } do 
+		local Items = {} do 
 			Items["KeybindList"] = Instances:Create("Frame", {
 				Parent = Library.Holder.Instance,
 				Name = "\0",
@@ -4010,7 +4038,7 @@ local Library do
 			})                
 		end
 
-		local VisibleItems = { }
+		local VisibleItems = {}
 
 		function KeybindList:SetTransparency()
 			Items["KeybindList"].Instance.BackgroundTransparency = Library.BackgroundTransparency
@@ -4113,6 +4141,7 @@ local Library do
 
 		local TitleText = Data.Title or Data.Name or ""
 		local DescText = Data.Description or ""
+		local Duration = Data.Duration or 5
 
 		local PaddingH = 6
 		local PaddingV = 5
@@ -4122,23 +4151,13 @@ local Library do
 		local MaxWidth = 280
 
 		local function GetTextSize(Text, FontSize, Width)
-			local Success, Result = pcall(function()
-				return TextService:GetTextSize(Text, FontSize, Library.Font, Vector2.new(Width, 10000))
-			end)
+			local Font = Library.Font
 
-			if not Success or not Result then
-				Success, Result = pcall(function()
-					return TextService:GetTextSize(Text, FontSize, Enum.Font.Gotham, Vector2.new(Width, 10000))
-				end)
+			if typeof(Font) ~= "EnumItem" or Font.EnumType ~= Enum.Font then
+				Font = Enum.Font.Gotham
 			end
 
-			if not Success or not Result then
-				Success, Result = pcall(function()
-					return TextService:GetTextSize(Text, FontSize, Enum.Font.SourceSans, Vector2.new(Width, 10000))
-				end)
-			end
-
-			return Result or Vector2.new(Width, FontSize)
+			return TextService:GetTextSize(Text, FontSize, Font, Vector2.new(Width, 10000))
 		end
 
 		local TitleSize = GetTextSize(TitleText, 14, MaxWidth)
@@ -4154,7 +4173,7 @@ local Library do
 
 		local SizeY = PaddingV + TitleH + Gap + DescH + BarGap + BarH + PaddingV
 
-		local Items = { } do
+		local Items = {} do
 			Items["Notification"] = Instances:Create("Frame", {
 				Parent = Library.NotifHolder.Instance,
 				Name = "\0",
@@ -4260,32 +4279,39 @@ local Library do
 
 		Items["Notification"].Instance.Size = UDim2New(0, 0, 0, SizeY)
 
-		local Info = TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out, 0, false, 0)
+		local FadeInfo = TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out, 0, false, 0)
+		local BarInfo = TweenInfo.new(Duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+
+		local Frames = { Items["Notification"], Items["Duration"] }
+		local TextLabels = { Items["Title"] }
+		local DescLabel = Items["Description"]
 
 		Library:Thread(function()
-			for Index, Value in Items do
-				if Value.Instance:IsA("Frame") then
-					Value:Tween(Info, {BackgroundTransparency = 0})
-				elseif Value.Instance:IsA("TextLabel") and Index ~= "Description" then
-					Value:Tween(Info, {TextTransparency = 0})
-				elseif Value.Instance:IsA("TextLabel") and Index == "Description" then
-					Value:Tween(Info, {TextTransparency = 0.4})
-				end
+			for _, Item in Frames do
+				Item:Tween(FadeInfo, {BackgroundTransparency = 0})
 			end
 
-			Items["Notification"]:Tween(Info, {Size = UDim2New(0, ContentWidth, 0, SizeY)})
-			Items["Accent"]:Tween(TweenInfo.new(Data.Duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2New(0, 0, 1, 0)})
+			for _, Item in TextLabels do
+				Item:Tween(FadeInfo, {TextTransparency = 0})
+			end
 
-			delay(Data.Duration + 0.1, function()
-				for Index, Value in Items do
-					if Value.Instance:IsA("Frame") then
-						Value:Tween(nil, {BackgroundTransparency = 1})
-					elseif Value.Instance:IsA("TextLabel") then
-						Value:Tween(nil, {TextTransparency = 1})
-					end
+			DescLabel:Tween(FadeInfo, {TextTransparency = 0.4})
+
+			Items["Notification"]:Tween(FadeInfo, {Size = UDim2New(0, ContentWidth, 0, SizeY)})
+			Items["Accent"]:Tween(BarInfo, {Size = UDim2New(0, 0, 1, 0)})
+
+			delay(Duration + 0.1, function()
+				for _, Item in Frames do
+					Item:Tween(FadeInfo, {BackgroundTransparency = 1})
 				end
 
-				Items["Notification"]:Tween(Info, {Size = UDim2New(0, 0, 0, SizeY)})
+				for _, Item in TextLabels do
+					Item:Tween(FadeInfo, {TextTransparency = 1})
+				end
+
+				DescLabel:Tween(FadeInfo, {TextTransparency = 1})
+
+				Items["Notification"]:Tween(FadeInfo, {Size = UDim2New(0, 0, 0, SizeY)})
 				wait(0.5)
 				Items["Notification"]:Clean()
 			end)
@@ -4293,17 +4319,18 @@ local Library do
 	end
 
 	Library.Window = function(self, Data)
-		Data = Data or { }
+		Data = Data or {}
 
 		local Window = {
 			Name = Data.Name or Data.name or "Window",
 
-			Pages = { },
-			Items = { },
-			IsOpen = false
+			Pages = {},
+			Items = {},
+			IsOpen = false,
+			IsMinimized = false
 		}
 
-		local Items = { } do
+		local Items = {} do
 			Items["MainFrame"] = Instances:Create("Frame", {
 				Parent = Library.Holder.Instance,
 				Name = "\0",
@@ -4571,70 +4598,35 @@ local Library do
 				end
 			end)
 
-			Items["FloatingButton"]:Connect("InputBegan", function(Input)
-				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-					if Library.FloatingButtonLocked then
-						return
-					end
-
-					FloatingButtonDragging = true
-					FloatingButtonDragStart = Input.Position
-					FloatingButtonStartPosition = Items["FloatingButton"].Instance.Position
-
-					if FloatingButtonChanged then
-						return
-					end
-
-					FloatingButtonChanged = Input.Changed:Connect(function()
-						if Input.UserInputState == Enum.UserInputState.End then
-							FloatingButtonDragging = false
-
-							if FloatingButtonChanged then
-								FloatingButtonChanged:Disconnect()
-								FloatingButtonChanged = nil
-							end
-						end
-					end)
-				end
-			end)
-
-			Library:Connect(UserInputService.InputChanged, function(Input)
-				if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
-					if FloatingButtonDragging and not Library.FloatingButtonLocked then
-						FloatingButtonSet(Input)
-					end
-				end
-			end)
-
 			Items["FloatingButton"]:Connect("MouseButton1Down", function(Input)
 				Window:SetOpen(not Window.IsOpen)
 			end)
 
 			Window.Items = Items
-			Window.IsMinimized = false
 		end
 
-		local IsMinimized = false
-		local ExpandCount = 0
-		local ContentUnlocked = not (Data.Minimized or Data.minimized)
 		local OldSize = Items["MainFrame"].Instance.AbsoluteSize
+		local MinimizedSize = UDim2New(0, 285, 0, 35)
+
+		Items["MainFrame"].Instance:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+			if not Window.IsMinimized then
+				OldSize = Items["MainFrame"].Instance.AbsoluteSize
+			end
+		end)
 
 		function Window:Minimize(Bool)
-			for Index, Value in Library.OpenFrames do 
+			for Index, Value in Library.OpenFrames do
 				Value:SetOpen(false)
 			end
 
-			IsMinimized = Bool
 			Window.IsMinimized = Bool
 
-			if IsMinimized then 
-				Items["MainFrame"]:Tween(nil, {Size = UDim2New(0, OldSize.X, 0, 35)})
-				Items["MainFrame"]:Tween(nil, {Size = UDim2New(0, 285, 0, 35)})
+			if Window.IsMinimized then
+				Items["MainFrame"]:Tween(nil, {Size = MinimizedSize})
 
 				Items["Pages"].Instance.Visible = false
 				Items["Content"].Instance.Visible = false
 			else
-				ContentUnlocked = true
 				Items["MainFrame"]:Tween(nil, {Size = UDim2New(0, OldSize.X, 0, OldSize.Y)})
 
 				Items["Pages"].Instance.Visible = true
@@ -4732,7 +4724,7 @@ local Library do
 		end)
 
 		Items["MinimizeButton"]:Connect("MouseButton1Down", function()
-			Window:Minimize(not IsMinimized)
+			Window:Minimize(not Window.IsMinimized)
 		end)
 
 		Items["CloseButton"]:Connect("MouseButton1Down", function()
@@ -4795,7 +4787,6 @@ local Library do
 		Window:SetCenter()
 		wait()
 		if Data.Minimized or Data.minimized then
-			IsMinimized = true
 			Window.IsMinimized = true
 
 			Items["MainFrame"].Instance.Size = UDim2New(0, 285, 0, 35)
@@ -4809,7 +4800,7 @@ local Library do
 	end
 
 	Library.Page = function(self, Data)
-		Data = Data or { }
+		Data = Data or {}
 
 		local Page = {
 			Window = self,
@@ -4818,12 +4809,12 @@ local Library do
 			Columns = Data.Columns or Data.columns or 2,
 			IsKeyPage = Data.IsKeyPage or Data.iskeypage or false,
 
-			Items = { },
-			ColumnsData = { },
+			Items = {},
+			ColumnsData = {},
 			Active = false
 		}
 
-		local Items = { } do
+		local Items = {} do
 			Items["Inactive"] = Instances:Create("TextButton", {
 				Parent = Page.Window.Items["Pages"].Instance,
 				Name = "\0",
@@ -4979,7 +4970,7 @@ local Library do
 			Page.Items = Items
 		end
 
-		Library.SearchItems[Page] = { }
+		Library.SearchItems[Page] = {}
 
 		local Debounce = false
 
@@ -5035,7 +5026,7 @@ local Library do
 	end
 
 	Library.Pages.Section = function(self, Data)
-		Data = Data or { }
+		Data = Data or {}
 
 		local CollapsedDefault = true
 		if Data.Collapsed == false then
@@ -5050,10 +5041,10 @@ local Library do
 			Side = Data.Side or Data.side or 1,
 			Collapsed = CollapsedDefault,
 
-			Items = { }
+			Items = {}
 		}
 
-		local Items = { }
+		local Items = {}
 
 		Items["Section"] = Instances:Create("Frame", {
 			Parent = Section.Page.ColumnsData[Section.Side].Instance,
@@ -5170,53 +5161,63 @@ local Library do
 		})
 
 		local CurrentHeight = 0
+		local SizeDebounce = false
+
+		local TweenInfo_Fast = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		local TweenInfo_Normal = TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction)
+
+		local UpdateSize_Connection = nil
 
 		local function UpdateSize()
-			if Section.Collapsed then return end
+			if Section.Collapsed or SizeDebounce then return end
 
-			wait()
+			SizeDebounce = true
+			defer(function()
+				SizeDebounce = false
 
-			local TargetHeight = Items["Content"].Instance.AbsoluteSize.Y
+				if not Section.Collapsed then
+					local TargetHeight = Items["Content"].Instance.AbsoluteSize.Y
 
-			if TargetHeight == CurrentHeight then return end
-			CurrentHeight = TargetHeight
-
-			Items["ContentHolder"]:Tween(TweenInfo.new(Library.FadeSpeed, Library.Tween.Style, Library.Tween.Direction), {
-				Size = UDim2New(1, -16, 0, TargetHeight)
-			})
+					if TargetHeight ~= CurrentHeight then
+						CurrentHeight = TargetHeight
+						Items["ContentHolder"]:Tween(TweenInfo_Fast, {
+							Size = UDim2New(1, -16, 0, TargetHeight)
+						})
+					end
+				end
+			end)
 		end
+
+		UpdateSize_Connection = ListLayout.Instance:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateSize)
+
+		Items["Header"]:Connect("MouseButton1Down", function()
+			Section:SetCollapsed(not Section.Collapsed)
+		end)
 
 		function Section:SetCollapsed(Bool)
 			Section.Collapsed = Bool
 			Items["Line"].Instance.Visible = not Section.Collapsed
 
 			if Section.Collapsed then
-				Items["Indicator"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
+				Items["Indicator"]:Tween(TweenInfo_Normal, {
 					Rotation = 0,
 					ImageColor3 = Library.Theme["Text"]
 				})
 				Items["Content"].Instance.Visible = false
-				Items["ContentHolder"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
+				Items["ContentHolder"]:Tween(TweenInfo_Normal, {
 					Size = UDim2New(1, -16, 0, 0)
 				})
 			else
-				Items["Indicator"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
+				Items["Indicator"]:Tween(TweenInfo_Normal, {
 					Rotation = 90,
 					ImageColor3 = Library.Theme["Accent"]
 				})
-				wait()
 				Items["Content"].Instance.Visible = true
-				Items["ContentHolder"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
+				Items["ContentHolder"]:Tween(TweenInfo_Normal, {
 					Size = UDim2New(1, -16, 0, Items["Content"].Instance.AbsoluteSize.Y)
 				})
 			end
 		end
-
-		ListLayout.Instance:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateSize)
-
-		Items["Header"]:Connect("MouseButton1Down", function()
-			Section:SetCollapsed(not Section.Collapsed)
-		end)
 
 		Section.Items = Items
 		Section.Collapsed = Section.Collapsed
@@ -5227,7 +5228,7 @@ local Library do
 	end
 
 	Library.Sections.Toggle = function(self, Data)
-		Data = Data or { }
+		Data = Data or {}
 
 		local Toggle = {
 			Window = self.Window,
@@ -5245,7 +5246,7 @@ local Library do
 			Disabled = false,
 		}
 
-		local Items = { } do
+		local Items = {} do
 			Items["Toggle"] = Instances:Create("Frame", {
 				Parent = Toggle.Section.Items["Content"].Instance,
 				Name = "\0",
@@ -5380,38 +5381,27 @@ local Library do
 		end
 
 		function Toggle:Set(Value)
-			if Toggle.Disabled then 
-				return 
+			if Toggle.Disabled then
+				return
 			end
 
-			Toggle.Value = Value 
-			Library.Flags[Toggle.Flag] = Value 
+			Toggle.Value = Value
+			Library.Flags[Toggle.Flag] = Value
 
-			if Toggle.Value then 
-				Items["Text"]:Tween(nil, {TextTransparency = 0})
+			local ThemeKey = Value and "Accent" or "Element"
+			local TextTrans = Value and 0 or 0.4
+			local CircleTrans = Value and 0 or 0.4
 
-				Items["Circle"]:Tween(TweenInfo.new(Library.Tween.Time + 0.2, Enum.EasingStyle.Quart, Library.Tween.Direction), {
-					AnchorPoint = Vector2New(1, 0),
-					Position = UDim2New(1, -3, 0, 3),
-					BackgroundTransparency = 0,
-				})
+			Items["Text"]:Tween(nil, {TextTransparency = TextTrans})
+			Items["Circle"]:Tween(TweenInfo.new(Library.Tween.Time + 0.2, Enum.EasingStyle.Quart, Library.Tween.Direction), {
+				AnchorPoint = Value and Vector2New(1, 0) or Vector2New(0, 0),
+				Position = Value and UDim2New(1, -3, 0, 3) or UDim2New(0, 3, 0, 3),
+				BackgroundTransparency = CircleTrans,
+			})
+			Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = ThemeKey})
+			Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme[ThemeKey]})
 
-				Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
-				Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
-			else
-				Items["Text"]:Tween(nil, {TextTransparency = 0.4})
-
-				Items["Circle"]:Tween(TweenInfo.new(Library.Tween.Time + 0.2, Enum.EasingStyle.Quart, Library.Tween.Direction), {
-					AnchorPoint = Vector2New(0, 0),
-					Position = UDim2New(0, 3, 0, 3),
-					BackgroundTransparency = 0.4,
-				})
-
-				Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
-				Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
-			end
-
-			if Toggle.Callback then 
+			if Toggle.Callback then
 				Library:SafeCall(Toggle.Callback, Toggle.Value)
 			end
 
@@ -5421,21 +5411,13 @@ local Library do
 		function Toggle:SetDisabled(Bool)
 			Toggle.Disabled = Bool
 
-			if Toggle.Disabled then
-				Items["Text"]:Tween(nil, {TextTransparency = 0.6})
-				Items["Indicator"]:Tween(nil, {BackgroundTransparency = 0.6})
-				Items["Circle"]:Tween(nil, {BackgroundTransparency = 0.6})
-			else
-				if Toggle.Value then
-					Items["Text"]:Tween(nil, {TextTransparency = 0})
-					Items["Circle"]:Tween(nil, {BackgroundTransparency = 0})
-					Items["Indicator"]:Tween(nil, {BackgroundTransparency = 0})
-				else
-					Items["Text"]:Tween(nil, {TextTransparency = 0.4})
-					Items["Circle"]:Tween(nil, {BackgroundTransparency = 0.4})
-					Items["Indicator"]:Tween(nil, {BackgroundTransparency = 0})
-				end
-			end
+			local TextTrans = Bool and 0.6 or (Toggle.Value and 0 or 0.4)
+			local CircleTrans = Bool and 0.6 or (Toggle.Value and 0 or 0.4)
+			local IndicatorTrans = Bool and 0.6 or 0
+
+			Items["Text"]:Tween(nil, {TextTransparency = TextTrans})
+			Items["Circle"]:Tween(nil, {BackgroundTransparency = CircleTrans})
+			Items["Indicator"]:Tween(nil, {BackgroundTransparency = IndicatorTrans})
 		end
 
 		function Toggle:SetVisibility(Bool)
@@ -5443,7 +5425,7 @@ local Library do
 		end
 
 		function Toggle:Colorpicker(Data)
-			Data = Data or { }
+			Data = Data or {}
 
 			local Colorpicker = {
 				Window = Toggle.Window,
@@ -5470,7 +5452,7 @@ local Library do
 		end
 
 		function Toggle:Keybind(Data)
-			Data = Data or { }
+			Data = Data or {}
 
 			local Keybind = {
 				Window = Toggle.Window,
@@ -5536,7 +5518,7 @@ local Library do
 	end
 
 	Library.Sections.Checkbox = function(self, Data)
-		Data = Data or { }
+		Data = Data or {}
 
 		local Checkbox = {
 			Window = self.Window,
@@ -5554,7 +5536,7 @@ local Library do
 			Disabled = false,
 		}
 
-		local Items = { } do 
+		local Items = {} do 
 			Items["Checkbox"] = Instances:Create("Frame", {
 				Parent = Checkbox.Section.Items["Content"].Instance,
 				Name = "\0",
@@ -5678,31 +5660,28 @@ local Library do
 		end
 
 		function Checkbox:Get()
-			return Checkbox.Value 
+			return Checkbox.Value
 		end
 
 		function Checkbox:Set(Value)
-			if Checkbox.Disabled then 
-				return 
+			if Checkbox.Disabled then
+				return
 			end
 
 			Checkbox.Value = Value
 			Library.Flags[Checkbox.Flag] = Checkbox.Value
 
-			if Checkbox.Value then
-				Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
-				Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
-				Items["Check"]:Tween(nil, {ImageTransparency = 0})
-				Items["Text"]:Tween(nil, {TextTransparency = 0})
-			else
-				Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
-				Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
-				Items["Check"]:Tween(nil, {ImageTransparency = 1})
-				Items["Text"]:Tween(nil, {TextTransparency = 0.4})
-			end
+			local ThemeKey = Value and "Accent" or "Element"
+			local TextTrans = Value and 0 or 0.4
+			local CheckTrans = Value and 0 or 1
 
-			if Data.Callback then
-				Library:SafeCall(Data.Callback, Checkbox.Value)
+			Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = ThemeKey})
+			Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme[ThemeKey]})
+			Items["Check"]:Tween(nil, {ImageTransparency = CheckTrans})
+			Items["Text"]:Tween(nil, {TextTransparency = TextTrans})
+
+			if Checkbox.Callback then
+				Library:SafeCall(Checkbox.Callback, Checkbox.Value)
 			end
 
 			Library:SaveAutoloadIfEnabled()
@@ -5711,21 +5690,13 @@ local Library do
 		function Checkbox:SetDisabled(Bool)
 			Checkbox.Disabled = Bool
 
-			if Checkbox.Disabled then
-				Items["Text"]:Tween(nil, {TextTransparency = 0.6})
-				Items["Indicator"]:Tween(nil, {BackgroundTransparency = 0.6})
-				Items["Check"]:Tween(nil, {ImageTransparency = 1})
-			else
-				if Checkbox.Value then
-					Items["Text"]:Tween(nil, {TextTransparency = 0})
-					Items["Indicator"]:Tween(nil, {BackgroundTransparency = 0})
-					Items["Check"]:Tween(nil, {ImageTransparency = 0})
-				else
-					Items["Text"]:Tween(nil, {TextTransparency = 0.4})
-					Items["Indicator"]:Tween(nil, {BackgroundTransparency = 0})
-					Items["Check"]:Tween(nil, {ImageTransparency = 1})
-				end
-			end
+			local TextTrans = Bool and 0.6 or (Checkbox.Value and 0 or 0.4)
+			local IndicatorTrans = Bool and 0.6 or 0
+			local CheckTrans = Bool and 1 or (Checkbox.Value and 0 or 1)
+
+			Items["Text"]:Tween(nil, {TextTransparency = TextTrans})
+			Items["Indicator"]:Tween(nil, {BackgroundTransparency = IndicatorTrans})
+			Items["Check"]:Tween(nil, {ImageTransparency = CheckTrans})
 		end
 
 		function Checkbox:SetVisibility(Bool)
@@ -5733,7 +5704,7 @@ local Library do
 		end
 
 		function Checkbox:Colorpicker(Data)
-			Data = Data or { }
+			Data = Data or {}
 
 			local Colorpicker = {
 				Window = Checkbox.Window,
@@ -5760,7 +5731,7 @@ local Library do
 		end
 
 		function Checkbox:Keybind(Data)
-			Data = Data or { }
+			Data = Data or {}
 
 			local Keybind = {
 				Window = Checkbox.Window,
@@ -5831,7 +5802,7 @@ local Library do
 			Section = self,
 		}
 
-		local Items = { }
+		local Items = {}
 
 		Items["ButtonContainer"] = Instances:Create("Frame", {
 			Parent = Button.Section.Items["Content"].Instance,
@@ -5858,7 +5829,7 @@ local Library do
 				Disabled = false
 			}
 
-			local NewItems = { }
+			local NewItems = {}
 			do
 				NewItems["NewButton"] = Instances:Create("TextButton", {
 					Parent = Items["ButtonContainer"].Instance,
@@ -5967,7 +5938,7 @@ local Library do
 	end
 
 	Library.Sections.Slider = function(self, Data)
-		Data = Data or { }
+		Data = Data or {}
 
 		local Min = Data.Min or Data.min or 0
 		local Max = Data.Max or Data.max or 100
@@ -5986,7 +5957,7 @@ local Library do
 			SuggestedDecimals = math.max(math.ceil(math.log10(Range)) - 2, 0)
 		end
 
-		local Slider = {
+		local 		Slider = {
 			Window = self.Window,
 			Page = self.Page,
 			Section = self,
@@ -6006,9 +5977,10 @@ local Library do
 			Value = 0,
 			Sliding = false,
 			Disabled = false,
+			InputChangedConnection = nil,
 		}
 
-		local Items = { }
+		local Items = {}
 
 		Items["SliderContainer"] = Instances:Create("Frame", {
 			Parent = Slider.Section.Items["Content"].Instance,
@@ -6288,7 +6260,7 @@ local Library do
 
 			Items["Accent"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2New((Slider.Value - Slider.Min) / (Slider.Max - Slider.Min), 0, 1, 0)})
 
-			local DisplayValue = tonumber(string.format("%g", Slider.Value))
+			local DisplayValue = string.format("%g", Slider.Value)
 			Items["Value"].Instance.Text = StringFormat("%s%s", DisplayValue, Slider.Suffix)
 
 			if Slider.Callback then 
@@ -6325,7 +6297,19 @@ local Library do
 			TableInsert(PageSearchData, SearchData)
 		end
 
-		local InputChanged
+		local function UpdateSliderValue()
+			if Slider.Disabled or not Slider.Sliding then
+				return
+			end
+
+			local MouseLocation = UserInputService:GetMouseLocation()
+			local SliderAbs = Items["RealSlider"].Instance.AbsolutePosition
+			local SliderSize = Items["RealSlider"].Instance.AbsoluteSize
+			local SizeX = MathClamp((MouseLocation.X - SliderAbs.X) / SliderSize.X, 0, 1)
+			local Value = ((Slider.Max - Slider.Min) * SizeX) + Slider.Min
+
+			Slider:Set(Value)
+		end
 
 		Items["RealSlider"]:Connect("InputBegan", function(Input)
 			if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
@@ -6343,36 +6327,19 @@ local Library do
 
 				Slider:Set(Value)
 
-				if InputChanged then
-					return
-				end
-
-				InputChanged = Input.Changed:Connect(function()
+				Slider.InputChangedConnection = Input.Changed:Connect(function()
 					if Input.UserInputState == Enum.UserInputState.End then
 						Slider.Sliding = false
-
-						InputChanged:Disconnect()
-						InputChanged = nil
+						Slider.InputChangedConnection:Disconnect()
+						Slider.InputChangedConnection = nil
 					end
 				end)
 			end
 		end)
 
-		Library:Connect(UserInputService.InputChanged, function(Input)
+		Slider.InputChangedConnection = Library:Connect(UserInputService.InputChanged, function(Input)
 			if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
-				if Slider.Disabled then
-					return
-				end
-
-				if Slider.Sliding then
-					local MouseLocation = UserInputService:GetMouseLocation()
-					local SliderAbs = Items["RealSlider"].Instance.AbsolutePosition
-					local SliderSize = Items["RealSlider"].Instance.AbsoluteSize
-					local SizeX = MathClamp((MouseLocation.X - SliderAbs.X) / SliderSize.X, 0, 1)
-					local Value = ((Slider.Max - Slider.Min) * SizeX) + Slider.Min
-
-					Slider:Set(Value)
-				end
+				UpdateSliderValue()
 			end
 		end)
 
@@ -6388,6 +6355,19 @@ local Library do
 		end
 
 		function Slider:Destroy()
+			if Slider.InputChangedConnection then
+				Slider.InputChangedConnection:Disconnect()
+				Slider.InputChangedConnection = nil
+			end
+
+			if Library.SliderElements[Slider] then
+				Library.SliderElements[Slider] = nil
+			end
+
+			if Library.SetFlags[Slider.Flag] then
+				Library.SetFlags[Slider.Flag] = nil
+			end
+
 			for _, Item in Items do
 				if Item.Instance then
 					Item.Instance:Destroy()
@@ -6401,7 +6381,7 @@ local Library do
 	end
 
 	Library.Sections.Dropdown = function(self, Data)
-		Data = Data or { }
+		Data = Data or {}
 
 		local Dropdown = {
 			Window = self.Window,
@@ -6418,13 +6398,13 @@ local Library do
 			Callback = Data.Callback or Data.callback or function() end,
 			Multi = Data.Multi or Data.multi or false,
 
-			Value = { },
-			Options = { },
+			Value = {},
+			Options = {},
 			IsOpen = false,
 			Disabled = false,
 		}
 
-		local Items = { }
+		local Items = {}
 
 		Items["DropdownContainer"] = Instances:Create("Frame", {
 			Parent = Dropdown.Section.Items["Content"].Instance,
@@ -6708,23 +6688,20 @@ local Library do
 			local Scale = (Library.Holder.Instance:FindFirstChildOfClass("UIScale") or {Scale = 1}).Scale
 			local Button = Items["RealDropdown"].Instance
 			local MainFrame = Dropdown.Window.Items["MainFrame"].Instance
-			local PostionX, PostionY = MainFrame.AbsolutePosition.X, MainFrame.AbsolutePosition.Y
-			local MainFrameRight = PostionX + MainFrame.AbsoluteSize.X - 8
-			local MainFrameBottom = PostionY + MainFrame.AbsoluteSize.Y - 8
+			local MainFrameRight = MainFrame.AbsolutePosition.X + MainFrame.AbsoluteSize.X - 8
+			local MainFrameBottom = MainFrame.AbsolutePosition.Y + MainFrame.AbsoluteSize.Y - 8
 
 			local DropdownSize = Dropdown.MaxSize
-			local Left = math.max(Button.AbsolutePosition.X, PostionX + 8)
+			local Left = math.max(Button.AbsolutePosition.X, MainFrame.AbsolutePosition.X + 8)
 			local Out = math.min(Button.AbsolutePosition.X + Button.AbsoluteSize.X, MainFrameRight) - Left
 			local Below = MainFrameBottom - (Button.AbsolutePosition.Y + Button.AbsoluteSize.Y + 5)
 
 			if Below >= DropdownSize then
-				local Top = Button.AbsolutePosition.Y + Button.AbsoluteSize.Y + 5
-
-				Items["OptionHolder"].Instance.Position = UDim2New(0, Left / Scale, 0, Top / Scale)
-				Items["OptionHolder"].Instance.Size = UDim2New(0, Out / Scale, 0, (math.min(Top + DropdownSize, MainFrameBottom) - Top) / Scale)
+				Items["OptionHolder"].Instance.Position = UDim2New(0, Left / Scale, 0, (Button.AbsolutePosition.Y + Button.AbsoluteSize.Y + 5) / Scale)
+				Items["OptionHolder"].Instance.Size = UDim2New(0, Out / Scale, 0, (math.min(Button.AbsolutePosition.Y + Button.AbsoluteSize.Y + 5 + DropdownSize, MainFrameBottom) - (Button.AbsolutePosition.Y + Button.AbsoluteSize.Y + 5)) / Scale)
 			else
 				local List = Button.AbsolutePosition.Y - 5
-				local Top = math.max(List - DropdownSize, PostionY + 8)
+				local Top = math.max(List - DropdownSize, MainFrame.AbsolutePosition.Y + 8)
 
 				Items["OptionHolder"].Instance.Position = UDim2New(0, Left / Scale, 0, Top / Scale)
 				Items["OptionHolder"].Instance.Size = UDim2New(0, Out / Scale, 0, (List - Top) / Scale)
@@ -6737,19 +6714,21 @@ local Library do
 			end
 
 			Dropdown.IsOpen = Bool
-
 			Debounce = true
 
+			local Theme = Library.Theme
+			local TweenInfoArgs = {Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction}
+
 			if Dropdown.IsOpen then
-				wait()
-				Items["Icon"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
+				wait(0)
+				Items["Icon"]:Tween(TweenInfo.new(unpack(TweenInfoArgs)), {
 					Rotation = 90,
-					ImageColor3 = Library.Theme["Accent"]
+					ImageColor3 = Theme["Accent"]
 				})
 			else
-				Items["Icon"]:Tween(TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
+				Items["Icon"]:Tween(TweenInfo.new(unpack(TweenInfoArgs)), {
 					Rotation = 0,
-					ImageColor3 = Library.Theme["Text"]
+					ImageColor3 = Theme["Text"]
 				})
 			end
 
@@ -6830,50 +6809,43 @@ local Library do
 				return
 			end
 
+			local Flags = Library.Flags
+			local Flag = Dropdown.Flag
+
 			if Dropdown.Multi then
 				if type(Option) ~= "table" then
 					return
 				end
 
 				Dropdown.Value = Option
-				Library.Flags[Dropdown.Flag] = Option
+				Flags[Flag] = Option
 
-				for Index, Value in Option do
+				for _, Value in Option do
 					local OptionData = Dropdown.Options[Value]
 
-					if not OptionData then
-						continue
+					if OptionData then
+						OptionData.Selected = true
+						OptionData:Toggle("Active")
 					end
-
-					OptionData.Selected = true
-					OptionData:Toggle("Active")
 				end
 
 				Items["Value"].Instance.Text = TableConcat(Option, ", ")
 			else
-
 				local String = tostring(Option)
 				if String == "" or String == "nil" then
 					return
 				end
 
-				if not Dropdown.Options[String] then
+				local OptionData = Dropdown.Options[String]
+				if not OptionData then
 					return
 				end
 
-				local OptionData = Dropdown.Options[String]
-
 				Dropdown.Value = String
-				Library.Flags[Dropdown.Flag] = String
+				Flags[Flag] = String
 
-				for Index, Value in Dropdown.Options do
-					if Value ~= OptionData then
-						Value.Selected = false
-						Value:Toggle("Inactive")
-					else
-						Value.Selected = true
-						Value:Toggle("Active")
-					end
+				for _, Value in Dropdown.Options do
+					Value:Toggle(Value == OptionData and "Active" or "Inactive")
 				end
 
 				Items["Value"].Instance.Text = String
@@ -6946,6 +6918,9 @@ local Library do
 			function OptionData:Set()
 				OptionData.Selected = not OptionData.Selected
 
+				local Flags = Library.Flags
+				local Flag = Dropdown.Flag
+
 				if Dropdown.Multi then
 					local Index = TableFind(Dropdown.Value, OptionData.Name)
 
@@ -6956,34 +6931,28 @@ local Library do
 					end
 
 					OptionData:Toggle(Index and "Inactive" or "Active")
+					Flags[Flag] = Dropdown.Value
 
-					Library.Flags[Dropdown.Flag] = Dropdown.Value
-
-					local TextFormat = #Dropdown.Value > 0 and TableConcat(Dropdown.Value, ", ") or "..."
-					Items["Value"].Instance.Text = TextFormat
+					Items["Value"].Instance.Text = #Dropdown.Value > 0 and TableConcat(Dropdown.Value, ", ") or "..."
 				else
 					if OptionData.Selected then
 						Dropdown.Value = OptionData.Name
-						Library.Flags[Dropdown.Flag] = OptionData.Name
+						Flags[Flag] = OptionData.Name
 
-						OptionData.Selected = true
-						OptionData:Toggle("Active")
-
-						for Index, Value in Dropdown.Options do
+						for _, Value in Dropdown.Options do
 							if Value ~= OptionData then
 								Value.Selected = false
 								Value:Toggle("Inactive")
 							end
 						end
 
+						OptionData:Toggle("Active")
 						Items["Value"].Instance.Text = OptionData.Name
 					else
 						Dropdown.Value = nil
-						Library.Flags[Dropdown.Flag] = nil
+						Flags[Flag] = nil
 
-						OptionData.Selected = false
 						OptionData:Toggle("Inactive")
-
 						Items["Value"].Instance.Text = "..."
 					end
 				end
@@ -7130,7 +7099,7 @@ local Library do
 			HasSubElements = false,
 		}
 
-		local Items = { } do
+		local Items = {} do
 			Items["Label"] = Instances:Create("Frame", {
 				Parent = Label.Section.Items["Content"].Instance,
 				Name = "\0",
@@ -7265,86 +7234,71 @@ local Library do
 		end
 
 		function Label:Colorpicker(Data)
-			Data = Data or { }
+			Data = Data or {}
 
 			Label.HasSubElements = true
 
-			local Colorpicker = {
-				Window = Label.Window,
+			local NewColorpicker = Library:CreateColorpicker({
+				Parent = Items["SubElements"],
 				Page = Label.Page,
 				Section = Label.Section,
-
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
 				Default = Data.Default or Data.default or Color3.fromRGB(255, 255, 255),
 				Callback = Data.Callback or Data.callback or function() end,
 				Alpha = Data.Alpha or Data.alpha or false
-			}
-
-			local NewColorpicker, ColorpickerItems = Library:CreateColorpicker({
-				Parent = Items["SubElements"],
-				Page = Colorpicker.Page,
-				Section = Colorpicker.Section,
-				Flag = Colorpicker.Flag,
-				Default = Colorpicker.Default,
-				Callback = Colorpicker.Callback,
-				Alpha = Colorpicker.Alpha
 			})
 
 			return NewColorpicker
 		end
 
 		function Label:Keybind(Data)
-			Data = Data or { }
+			Data = Data or {}
 
 			Label.HasSubElements = true
 
-			local Keybind = {
-				Window = Label.Window,
+			local NewKeybind = Library:CreateKeybind({
+				Parent = Items["SubElements"],
+				Name = Data.Name or Data.name or Label.Name,
 				Page = Label.Page,
 				Section = Label.Section,
-
-				Name = Data.Name or Data.name or Label.Name,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
 				Default = Data.Default or Data.default or Enum.KeyCode.E,
-				Callback = Data.Callback or Data.callback or function() end,
-				Mode = Data.Mode or Data.mode or "Toggle"
-			}
-
-			local NewKeybind, KeybindItems = Library:CreateKeybind({
-				Parent = Items["SubElements"],
-				Name = Keybind.Name,
-				Page = Keybind.Page,
-				Section = Keybind.Section,
-				Flag = Keybind.Flag,
-				Default = Keybind.Default,
-				Mode = Keybind.Mode,
-				Callback = Keybind.Callback
+				Mode = Data.Mode or Data.mode or "Toggle",
+				Callback = Data.Callback or Data.callback or function() end
 			})
 
 			return NewKeybind
 		end
 
 		function Label:SetText(Text)
-			Text = tostring(Text)
-			Items["Text"].Instance.Text = Text
+			if Items["Text"] and Items["Text"].Instance then
+				Items["Text"].Instance.Text = tostring(Text)
+			end
 		end
 
 		function Label:SetTextColor(Color)
+			if not Items["Text"] or not Items["Text"].Instance then
+				return
+			end
+
 			if type(Color) == "table" then
 				Color = FromRGB(Color[1], Color[2], Color[3])
 			elseif type(Color) == "string" then
 				Color = FromHex(Color)
 			end
+
 			Items["Text"].Instance.TextColor3 = Color
 		end
 
 		function Label:SetVisibility(Bool)
-			Items["Label"].Instance.Visible = Bool
+			if Items["Label"] and Items["Label"].Instance then
+				Items["Label"].Instance.Visible = Bool
+			end
 		end
 
 		function Label:Destroy()
 			for _, Item in Items do
-				if Item.Instance then
+				if Item and Item.Instance then
 					Item.Instance:Destroy()
 				end
 			end
@@ -7356,7 +7310,7 @@ local Library do
 		return Label
 	end
 	Library.Sections.Textbox = function(self, Data)
-		Data = Data or { }
+		Data = Data or {}
 
 		local Textbox = {
 			Window = self.Window,
@@ -7377,7 +7331,7 @@ local Library do
 			Value = ""
 		}
 
-		local Items = { }
+		local Items = {}
 
 		Items["TextboxContainer"] = Instances:Create("Frame", {
 			Parent = Textbox.Section.Items["Content"].Instance,
@@ -7494,17 +7448,13 @@ local Library do
 			ZIndex = 2
 		}):AddToTheme({TextColor3 = 'Text', PlaceholderColor3 = 'Inactive Text'})
 
-		Instances:Create("UIGradient", {
-			Parent = Items["Input"].Instance,
-			Name = "\0",
-			Transparency = NumSequence{NumSequenceKeypoint(0, 0), NumSequenceKeypoint(0.676, 0), NumSequenceKeypoint(1, 1)}
-		})
-
 		Library.TextboxElements[Textbox] = {
 			Textbox = Items["TextboxContainer"],
 			Background = Items["Background"],
 			Input = Items["Input"]
 		}
+
+		local InputInstance = Items["Input"].Instance
 
 		function Textbox:Get()
 			return Textbox.Value
@@ -7519,14 +7469,14 @@ local Library do
 				end
 				Items["Background"]:Tween(nil, {BackgroundTransparency = 0.6})
 				Items["Input"]:Tween(nil, {TextTransparency = 0.6})
-				Items["Input"].Instance.Interactable = false
+				InputInstance.Interactable = false
 			else
 				if Items["Text"] then
 					Items["Text"]:Tween(nil, {TextTransparency = 0})
 				end
 				Items["Background"]:Tween(nil, {BackgroundTransparency = 0})
 				Items["Input"]:Tween(nil, {TextTransparency = 0})
-				Items["Input"].Instance.Interactable = true
+				InputInstance.Interactable = true
 			end
 		end
 
@@ -7545,8 +7495,8 @@ local Library do
 
 			Textbox.Value = Value
 
-			if Items["Input"].Instance.Text ~= String then
-				Items["Input"].Instance.Text = String
+			if InputInstance.Text ~= String then
+				InputInstance.Text = String
 			end
 
 			Library.Flags[Textbox.Flag] = Value
@@ -7575,15 +7525,15 @@ local Library do
 					return
 				end
 				if PressedEnterQuestionMark then
-					Textbox:Set(Items["Input"].Instance.Text)
+					Textbox:Set(InputInstance.Text)
 				end
 			end)
 		else
-			Library:Connect(Items["Input"].Instance:GetPropertyChangedSignal("Text"), function()
+			Library:Connect(InputInstance:GetPropertyChangedSignal("Text"), function()
 				if Textbox.Disabled then
 					return
 				end
-				Textbox:Set(Items["Input"].Instance.Text)
+				Textbox:Set(InputInstance.Text)
 			end)
 		end
 
@@ -7599,26 +7549,9 @@ local Library do
 		end
 
 		function Textbox:Destroy()
-
 			for _, Item in Items do
 				if Item.Instance then
 					Item.Instance:Destroy()
-				end
-			end
-
-			for _, Connection in Library.Connections do
-				if Connection.Event and Connection.Event.Instance == Items["Input"].Instance then
-					Connection.Connection:Disconnect()
-				end
-			end
-
-			Library.ThemeItems = Library.ThemeItems or {}
-
-			for i = #Library.ThemeItems, 1, -1 do
-				local ThemeItem = Library.ThemeItems[i]
-
-				if ThemeItem.Item and Items["Input"].Instance and ThemeItem.Item:IsDescendantOf(Items["Input"].Instance) then
-					table.remove(Library.ThemeItems, i)
 				end
 			end
 
@@ -7641,10 +7574,30 @@ local Library do
 		do
 			local ThemeSetting_Section = Settings:Section({Name = "Theme Setting", Side = 1})
 			local ThemeConfig_Section = Settings:Section({Name = "Theme Config", Side = 1})
-			local Theme_Colorpicker = { }		
+			local Theme_Colorpicker = {}
+
+			local ThemeFolder = Library:GetFolderTheme()
+
+			local function NotifySuccessTheme(Message)
+				Library:Notification({
+					Name = "Success",
+					Description = Message,
+					Color = Color3.fromRGB(0, 255, 0),
+					Duration = 5
+				})
+			end
+
+			local function NotifyErrorTheme(Message)
+				Library:Notification({
+					Name = "Error",
+					Description = Message,
+					Color = Color3.fromRGB(255, 0, 0),
+					Duration = 5
+				})
+			end
 
 			do
-				for Index, Value in Library.Theme do 
+				for Index, Value in Library.Theme do
 					Theme_Colorpicker[Index] = ThemeSetting_Section:Label(Index, Index:lower() .. " theme color"):Colorpicker({
 						Flag = Index,
 						Default = Value,
@@ -7658,17 +7611,17 @@ local Library do
 			end
 
 			do
-				local Theme_Name 
-				local Theme_Selected 
+				local Theme_Name
+				local Theme_Selected
 
 				local Theme_Dropdown = ThemeConfig_Section:Dropdown({
 					Name = "Themes Select",
 					Flag = "Themes Select",
 					Description = "Select a theme preset",
-					Items = { },
+					Items = {},
 					Multi = false,
 					Callback = function(Value)
-						Theme_Selected = Value 
+						Theme_Selected = Value
 					end
 				})
 
@@ -7679,103 +7632,88 @@ local Library do
 					Placeholder = "Theme name...",
 					Finished = true,
 					Callback = function(Value)
-						Theme_Name = Value 
+						Theme_Name = Value
 					end
 				})
 
 				ThemeConfig_Section:Button():Add("Create", function()
-					if Theme_Name then 
-						if Theme_Name == "" then 
-							return
-						end
+					if not Theme_Name or Theme_Name == "" then
+						return
+					end
 
-						writefile(Library:GetFolderTheme() .. Theme_Name .. ".json", Library:GetTheme())
+					local Success, Error = pcall(function()
+						writefile(ThemeFolder .. Theme_Name .. ".json", Library:GetTheme())
+					end)
+
+					if Success then
 						Library:RefreshThemeList(Theme_Dropdown)
-
-						Library:Notification({
-							Name = "Success",
-							Description = "Succesfully created theme: ".. Theme_Name,
-							Color = Color3.fromRGB(0, 255, 0),
-							Duration = 5
-						})
+						NotifySuccessTheme("Succesfully created theme: " .. Theme_Name)
+					else
+						NotifyErrorTheme("Failed to create theme: " .. Theme_Name .. " " .. tostring(Error))
 					end
 				end):Add("Delete", function()
-					if Theme_Selected then 
-						if isfile(Library:GetFolderTheme().. Theme_Selected .. ".json") then
-							delfile(Library:GetFolderTheme().. Theme_Selected .. ".json")
-							Library:RefreshThemeList(Theme_Dropdown)
+					if not Theme_Selected then
+						NotifyErrorTheme("Please select a theme first")
+						return
+					end
 
-							Library:Notification({
-								Name = "Success",
-								Description = "Succesfully deleted theme: ".. Theme_Selected,
-								Color = Color3.fromRGB(0, 255, 0),
-								Duration = 5
-							})
+					local ThemePath = ThemeFolder .. Theme_Selected .. ".json"
+					local Success, Error = pcall(function()
+						if isfile(ThemePath) then
+							delfile(ThemePath)
 						end
+					end)
+
+					if Success then
+						Library:RefreshThemeList(Theme_Dropdown)
+						NotifySuccessTheme("Succesfully deleted theme: " .. Theme_Selected)
+					else
+						NotifyErrorTheme("Failed to delete theme: " .. Theme_Selected .. " " .. tostring(Error))
 					end
 				end)
 
 				ThemeSetting_Section:Button():Add("Load", function()
-					if Theme_Selected then 
-						if isfile(Library:GetFolderTheme().. Theme_Selected .. ".json") then
-							local ThemeContent = readfile(Library:GetFolderTheme().. Theme_Selected .. ".json")
-							local Success, Error = Library:LoadTheme(ThemeContent)
+					if not Theme_Selected then
+						NotifyErrorTheme("Please select a theme first")
+						return
+					end
 
-							if Success then 
-								Library:Notification({
-									Name = "Success",
-									Description = "Succesfully loaded theme: ".. Theme_Selected,
-									Color = Color3.fromRGB(0, 255, 0),
-									Duration = 5
-								})
-							else
-								Library:Notification({
-									Name = "Error",
-									Description = "Failed to load theme: ".. Theme_Selected .. " " .. Error,
-									Color = Color3.fromRGB(255, 0, 0),
-									Duration = 5
-								})
-							end
-						else
-							Library:Notification({
-								Name = "Error",
-								Description = "Failed to find theme: ".. Theme_Selected,
-								Color = Color3.fromRGB(255, 0, 0),
-								Duration = 5
-							})
-						end
+					local ThemePath = ThemeFolder .. Theme_Selected .. ".json"
+
+					if not isfile(ThemePath) then
+						NotifyErrorTheme("Failed to find theme: " .. Theme_Selected)
+						return
+					end
+
+					local ThemeContent = readfile(ThemePath)
+					local Success, Error = Library:LoadTheme(ThemeContent)
+
+					if Success then
+						NotifySuccessTheme("Succesfully loaded theme: " .. Theme_Selected)
+					else
+						NotifyErrorTheme("Failed to load theme: " .. Theme_Selected .. " " .. tostring(Error))
 					end
 				end):Add("Save", function()
-					if Theme_Selected then
-						if isfile(Library:GetFolderTheme().. Theme_Selected .. ".json") then
+					if not Theme_Selected then
+						NotifyErrorTheme("Please select a theme first")
+						return
+					end
 
-							local Success, Error = pcall(function()
-								writefile(Library:GetFolderTheme().. Theme_Selected .. ".json", Library:GetTheme())
-							end)
+					local ThemePath = ThemeFolder .. Theme_Selected .. ".json"
 
-							if Success then 
-								Library:Notification({
-									Name = "Success",
-									Description = "Succesfully saved theme: ".. Theme_Selected,
-									Color = Color3.fromRGB(0, 255, 0),
-									Duration = 5
-								})
-							else
-								Library:Notification({
-									Name = "Error",
-									Description = "Failed to save theme: ".. Theme_Selected .. " " .. Error,
-									Color = Color3.fromRGB(255, 0, 0),
-									Duration = 5
-								})
-							end
-						else
-							Library:Notification({
-								Name = "Error",
-								Description = "Failed to find theme: ".. Theme_Selected,
-								Color = Color3.fromRGB(255, 0, 0),
-								Duration = 5
-							})
-						end
+					if not isfile(ThemePath) then
+						NotifyErrorTheme("Failed to find theme: " .. Theme_Selected)
+						return
+					end
+
+					local Success, Error = pcall(function()
+						writefile(ThemePath, Library:GetTheme())
+					end)
+
+					if Success then
+						NotifySuccessTheme("Succesfully saved theme: " .. Theme_Selected)
+					else
+						NotifyErrorTheme("Failed to save theme: " .. Theme_Selected .. " " .. tostring(Error))
 					end
 				end)
 
@@ -7784,20 +7722,20 @@ local Library do
 				end)
 
 				local Preset_Section = ThemeSetting_Section:Dropdown({
-					Name = "Themes Preset", 
-					Flag = "Themes Preset", 
+					Name = "Themes Preset",
+					Flag = "Themes Preset",
 					Description = "Select a theme",
-					Items = { }, 
+					Items = {},
 					Default = "Preset",
 					Multi = false,
 					Callback = function(Value)
 						local ThemeData = Library.Themes[Value]
 
-						if not ThemeData then 
+						if not ThemeData then
 							return
 						end
 
-						for Index, Value in Library.Theme do 
+						for Index, Value in Library.Theme do
 							Library.Theme[Index] = ThemeData[Index]
 							Library:ChangeTheme(Index, ThemeData[Index])
 
@@ -7806,7 +7744,7 @@ local Library do
 					end
 				})
 
-				for Index, Value in Library.Themes do 
+				for Index, Value in Library.Themes do
 					Preset_Section:Add(Index)
 				end
 
@@ -7823,124 +7761,131 @@ local Library do
 		do
 			local ConfigHub_Section = Settings:Section({Name = "Config Hub", Side = 2})
 
+			local ConfigFolder = Library:GetFolder()
+			local AutoloadPath = Library.Folders_Path.Directory .. "/autoload.json"
+
+			local function NotifySuccessConfig(Message)
+				Library:Notification({
+					Name = "Success",
+					Description = Message,
+					Color = Color3.fromRGB(0, 255, 0),
+					Duration = 5
+				})
+			end
+
+			local function NotifyErrorConfig(Message)
+				Library:Notification({
+					Name = "Error",
+					Description = Message,
+					Color = Color3.fromRGB(255, 0, 0),
+					Duration = 5
+				})
+			end
+
 			do
-				local Config_Name 
-				local Config_Selected 
+				local Config_Name
+				local Config_Selected
 
 				local Config_Dropdown = ConfigHub_Section:Dropdown({
 					Name = "Config Select",
 					Flag = "Config Select",
 					Description = "List of the configs",
-					Items = { },
+					Items = {},
 					Multi = false,
 					Callback = function(Value)
-						Config_Selected = Value 
+						Config_Selected = Value
 					end
 				})
 
 				ConfigHub_Section:Textbox({
 					Name = "Config Name",
 					Flag = "Config Name",
-					Description = "Name of the config",                   
+					Description = "Name of the config",
 					Placeholder = "Config name...",
 					Finished = true,
 					Callback = function(Value)
-						Config_Name = Value 					
+						Config_Name = Value
 					end
 				})
 
-				ConfigHub_Section:Button():Add("Create", function()				
-					if Config_Name then 
-						if Config_Name == "" then 
-							return
-						end
+				ConfigHub_Section:Button():Add("Create", function()
+					if not Config_Name or Config_Name == "" then
+						return
+					end
 
-						writefile(Library:GetFolder() .. Config_Name .. ".json", Library:GetConfig())
+					local Success, Error = pcall(function()
+						writefile(ConfigFolder .. Config_Name .. ".json", Library:GetConfig())
+					end)
+
+					if Success then
 						Library:RefreshConfigsList(Config_Dropdown)
-
-						Library:Notification({
-							Name = "Success",
-							Description = "Succesfully created config: ".. Config_Name,
-							Color = Color3.fromRGB(0, 255, 0),
-							Duration = 5
-						})
+						NotifySuccessConfig("Succesfully created config: " .. Config_Name)
+					else
+						NotifyErrorConfig("Failed to create config: " .. Config_Name .. " " .. tostring(Error))
 					end
 				end):Add("Delete", function()
-					if Config_Selected then 
-						if isfile(Library:GetFolder().. Config_Selected .. ".json") then
-							delfile(Library:GetFolder().. Config_Selected .. ".json")
-							Library:RefreshConfigsList(Config_Dropdown)
+					if not Config_Selected then
+						NotifyErrorConfig("Please select a config first")
+						return
+					end
 
-							Library:Notification({
-								Name = "Success",
-								Description = "Succesfully deleted config: ".. Config_Selected,
-								Color = Color3.fromRGB(0, 255, 0),
-								Duration = 5
-							})
+					local ConfigPath = ConfigFolder .. Config_Selected .. ".json"
+					local Success, Error = pcall(function()
+						if isfile(ConfigPath) then
+							delfile(ConfigPath)
 						end
+					end)
+
+					if Success then
+						Library:RefreshConfigsList(Config_Dropdown)
+						NotifySuccessConfig("Succesfully deleted config: " .. Config_Selected)
+					else
+						NotifyErrorConfig("Failed to delete config: " .. Config_Selected .. " " .. tostring(Error))
 					end
 				end)
 
 				ConfigHub_Section:Button():Add("Load", function()
-					if Config_Selected then 
-						if isfile(Library:GetFolder().. Config_Selected .. ".json") then
-							local ConfigContent = readfile(Library:GetFolder().. Config_Selected .. ".json")
-							local Success, Error = Library:LoadConfig(ConfigContent)
+					if not Config_Selected then
+						NotifyErrorConfig("Please select a config first")
+						return
+					end
 
-							if Success then 
-								Library:Notification({
-									Name = "Success",
-									Description = "Succesfully loaded config: ".. Config_Selected,
-									Color = Color3.fromRGB(0, 255, 0),
-									Duration = 5
-								})
-							else
-								Library:Notification({
-									Name = "Error",
-									Description = "Failed to load config: ".. (Config_Selected or "Unknown") .. " " .. (Error or "Unknown error"),
-									Color = Color3.fromRGB(255, 0, 0),
-									Duration = 5
-								})
-							end
-						else
-							Library:Notification({
-								Name = "Error",
-								Description = "Failed to find config: ".. Config_Selected,
-								Color = Color3.fromRGB(255, 0, 0),
-								Duration = 5
-							})
-						end
+					local ConfigPath = ConfigFolder .. Config_Selected .. ".json"
+
+					if not isfile(ConfigPath) then
+						NotifyErrorConfig("Failed to find config: " .. Config_Selected)
+						return
+					end
+
+					local ConfigContent = readfile(ConfigPath)
+					local Success, Error = Library:LoadConfig(ConfigContent)
+
+					if Success then
+						NotifySuccessConfig("Succesfully loaded config: " .. Config_Selected)
+					else
+						NotifyErrorConfig("Failed to load config: " .. (Config_Selected or "Unknown") .. " " .. tostring(Error))
 					end
 				end):Add("Save", function()
-					if Config_Selected then
-						if isfile(Library:GetFolder().. Config_Selected .. ".json") then
-							local Success, Error = pcall(function()
-								writefile(Library:GetFolder().. Config_Selected .. ".json", Library:GetConfig())
-							end)
+					if not Config_Selected then
+						NotifyErrorConfig("Please select a config first")
+						return
+					end
 
-							if Success then 
-								Library:Notification({
-									Name = "Success",
-									Description = "Succesfully saved config: ".. Config_Selected,
-									Color = Color3.fromRGB(0, 255, 0),
-									Duration = 5
-								})
-							else
-								Library:Notification({
-									Name = "Error",
-									Description = "Failed to save config: ".. Config_Selected .. " " .. Error,
-									Color = Color3.fromRGB(255, 0, 0),
-									Duration = 5
-								})
-							end
-						else
-							Library:Notification({
-								Name = "Error",
-								Description = "Failed to find config: ".. Config_Selected,
-								Color = Color3.fromRGB(255, 0, 0),
-								Duration = 5
-							})
-						end
+					local ConfigPath = ConfigFolder .. Config_Selected .. ".json"
+
+					if not isfile(ConfigPath) then
+						NotifyErrorConfig("Failed to find config: " .. Config_Selected)
+						return
+					end
+
+					local Success, Error = pcall(function()
+						writefile(ConfigPath, Library:GetConfig())
+					end)
+
+					if Success then
+						NotifySuccessConfig("Succesfully saved config: " .. Config_Selected)
+					else
+						NotifyErrorConfig("Failed to save config: " .. Config_Selected .. " " .. tostring(Error))
 					end
 				end)
 
@@ -7949,26 +7894,25 @@ local Library do
 				end)
 
 				ConfigHub_Section:Button():Add("Set Autoload", function()
-
-					pcall(function()
-						writefile(Library.Folders_Path.Directory .. "/autoload.json", Library:GetConfig())
+					local Success, Error = pcall(function()
+						writefile(AutoloadPath, Library:GetConfig())
 					end)
 
-					Library:Notification({
-						Name = "Success",
-						Description = "Autoload set to current config",
-						Color = Color3.fromRGB(0, 255, 0),
-						Duration = 5
-					})
+					if Success then
+						NotifySuccessConfig("Autoload set to current config")
+					else
+						NotifyErrorConfig("Failed to set autoload: " .. tostring(Error))
+					end
 				end):Add("Remove Autoload", function()
-					writefile(Library.Folders_Path.Directory .. "/autoload.json", "")
+					local Success, Error = pcall(function()
+						writefile(AutoloadPath, "")
+					end)
 
-					Library:Notification({
-						Name = "Success",
-						Description = "Succesfully removed autoload",
-						Color = Color3.fromRGB(0, 255, 0),
-						Duration = 5
-					})
+					if Success then
+						NotifySuccessConfig("Succesfully removed autoload")
+					else
+						NotifyErrorConfig("Failed to remove autoload: " .. tostring(Error))
+					end
 				end)
 
 				local Pasted_Config = ""
@@ -7986,41 +7930,25 @@ local Library do
 
 				ConfigHub_Section:Button():Add("Share Config", function()
 					local CurrentConfig = Library:GetConfig()
+					local Success, Error = pcall(setclipboard, CurrentConfig)
 
-					setclipboard(CurrentConfig)
-
-					Library:Notification({
-						Name = "Success",
-						Description = "Config copied to clipboard",
-						Color = Color3.fromRGB(0, 255, 0),
-						Duration = 5
-					})
-				end):Add("Import Pasted", function()
-					if Pasted_Config and Pasted_Config ~= "" then
-						local Success, Error = Library:LoadConfig(Pasted_Config)
-
-						if Success then
-							Library:Notification({
-								Name = "Success",
-								Description = "Succesfully imported config",
-								Color = Color3.fromRGB(0, 255, 0),
-								Duration = 5
-							})
-						else
-							Library:Notification({
-								Name = "Error",
-								Description = "Failed to import config: ".. tostring(Error),
-								Color = Color3.fromRGB(255, 0, 0),
-								Duration = 5
-							})
-						end
+					if Success then
+						NotifySuccessConfig("Config copied to clipboard")
 					else
-						Library:Notification({
-							Name = "Error",
-							Description = "No config pasted",
-							Color = Color3.fromRGB(255, 0, 0),
-							Duration = 5
-						})
+						NotifyErrorConfig("Failed to copy config: " .. tostring(Error))
+					end
+				end):Add("Import Pasted", function()
+					if not Pasted_Config or Pasted_Config == "" then
+						NotifyErrorConfig("No config pasted")
+						return
+					end
+
+					local Success, Error = Library:LoadConfig(Pasted_Config)
+
+					if Success then
+						NotifySuccessConfig("Succesfully imported config")
+					else
+						NotifyErrorConfig("Failed to import config: " .. tostring(Error))
 					end
 				end)
 
