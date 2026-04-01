@@ -7569,92 +7569,21 @@ local Library do
 			TableInsert(PageSearchData, SearchData)
 		end
 
-		local TextFocused = false
-		local LastStableValue = Textbox.Value
-
 		if Textbox.Finished then
-			Items["Input"]:Connect("Focused", function()
+			Items["Input"]:Connect("FocusLost", function(PressedEnterQuestionMark)
 				if Textbox.Disabled then
 					return
 				end
-				TextFocused = true
-			end)
-
-			Items["Input"]:Connect("FocusLost", function(pressedEnter)
-				if Textbox.Disabled then
-					return
-				end
-				TextFocused = false
-
-				local Text = Items["Input"].Instance.Text
-
-				if Textbox.Numeric then
-					local Stripped = StringGSub(Text, "[^0-9%.%-]", "")
-
-					if Stripped == "" then
-						Items["Input"].Instance.Text = LastStableValue
-					else
-						local Parsed = tonumber(Stripped)
-
-						if Parsed then
-							Textbox:Set(Parsed)
-							LastStableValue = Textbox.Value
-						else
-							Items["Input"].Instance.Text = LastStableValue
-						end
-					end
-				else
-					if Text ~= LastStableValue then
-						Textbox:Set(Text)
-						LastStableValue = Textbox.Value
-					else
-						Items["Input"].Instance.Text = LastStableValue
-					end
+				if PressedEnterQuestionMark then
+					Textbox:Set(Items["Input"].Instance.Text)
 				end
 			end)
 		else
-			Items["Input"]:Connect("Focused", function()
-				if Textbox.Disabled then
-					return
-				end
-				TextFocused = true
-			end)
-
-			Items["Input"]:Connect("FocusLost", function()
-				if Textbox.Disabled then
-					return
-				end
-				TextFocused = false
-				LastStableValue = Textbox.Value
-			end)
-
 			Library:Connect(Items["Input"].Instance:GetPropertyChangedSignal("Text"), function()
 				if Textbox.Disabled then
 					return
 				end
-
-				local Text = Items["Input"].Instance.Text
-
-				if TextFocused then
-					if Textbox.Numeric then
-						local Stripped = StringGSub(Text, "[^0-9%.%-]", "")
-
-						if Stripped == "" or Stripped == "-" or Stripped == "." or Stripped == "-." then
-							return
-						end
-
-						local Parsed = tonumber(Stripped)
-
-						if Parsed then
-							Textbox.Value = Parsed
-							Library.Flags[Textbox.Flag] = Parsed
-						end
-					end
-				else
-					if Textbox.Value ~= Text then
-						Textbox:Set(Text)
-					end
-				end
+				Textbox:Set(Items["Input"].Instance.Text)
 			end)
 		end
 
