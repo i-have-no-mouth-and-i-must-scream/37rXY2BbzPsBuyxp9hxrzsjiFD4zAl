@@ -82,6 +82,7 @@ local Library do
 	local GetUI = gethui or function()
 		local Success, Result = pcall(function()
 			local CoreGui = game:GetService("CoreGui")
+
 			return CoreGui
 		end)
 
@@ -580,8 +581,8 @@ local Library do
 
 		Tween.FadeItem = function(self, Item, Property, Visibility, Speed)
 			local Item = Item or self.Item 
-
 			local OldTransparency = Item[Property]
+
 			Item[Property] = Visibility and 1 or OldTransparency
 
 			local NewTween = Tween:Create(Item, TweenInfo.new(Speed or Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), {
@@ -1279,6 +1280,7 @@ local Library do
 			get = function(var)
 				return getgenv()[var]
 			end,
+
 			current_key = getgenv().key
 		}
 
@@ -1298,31 +1300,31 @@ local Library do
 					return "Lifetime"
 				end
 
-				local days = MathFloor(v / 86400)
-				local hours = MathFloor((v % 86400) / 3600)
-				local minutes = MathFloor((v % 3600) / 60)
-				local seconds = v % 60
+				local Days = MathFloor(v / 86400)
+				local Hours = MathFloor((v % 86400) / 3600)
+				local Minutes = MathFloor((v % 3600) / 60)
+				local Seconds = v % 60
 
-				if days > 0 then
-					return StringFormat("%dd %dh %dm %ds", days, hours, minutes, seconds)
-				elseif hours > 0 then
-					return StringFormat("%dh %dm %ds", hours, minutes, seconds)
-				elseif minutes > 0 then
-					return StringFormat("%dm %ds", minutes, seconds)
+				if Days > 0 then
+					return StringFormat("%dd %dh %dm %ds", Days, Hours, Minutes, Seconds)
+				elseif Hours > 0 then
+					return StringFormat("%dh %dm %ds", Hours, Minutes, Seconds)
+				elseif Minutes > 0 then
+					return StringFormat("%dm %ds", Minutes, Seconds)
 				else
-					return StringFormat("%ds", seconds)
+					return StringFormat("%ds", Seconds)
 				end
 			end
 		end
 
 		local function UpdateKeyInfo()
-			local expire = KeyVars.get("key_expire")
+			local Expire = KeyVars.get("key_expire")
 
-			if expire and expire > 0 then
-				local remaining = expire - os.time()
+			if Expire and Expire > 0 then
+				local Remaining = Expire - os.time()
 
-				if remaining > 0 then
-					Labels.Expires:SetText("Expires: " .. ToTime(remaining))
+				if Remaining > 0 then
+					Labels.Expires:SetText("Expires: " .. ToTime(Remaining))
 				else
 					Players.LocalPlayer:Kick("Your key has expired.")
 				end
@@ -1368,7 +1370,7 @@ local Library do
 				Position = UDim2New(0.5, 0, 0.5, 0),
 				RichText = false,
 				Size = UDim2New(1, -20, 0, 40),
-				Text = "Son, your key is expiring soon",
+				Text = "Son, your key is expiring soon 😭🙏",
 				TextColor3 = FromRGB(255, 255, 255),
 				TextSize = 14,
 				TextTruncate = Enum.TextTruncate.None,
@@ -1386,36 +1388,36 @@ local Library do
 		end
 
 		local function RefreshKeyFromAPI()
-			local key = KeyVars.get("key")
-			local api = KeyVars.get("luarmor_api")
+			local Key = KeyVars.get("key")
+			local Api = KeyVars.get("luarmor_api")
 
-			if not key or key == "" or not api then
+			if not Key or Key == "" or not Api then
 				HideKeyWarning()
 				return
 			end
 
-			local Success, Result = pcall(api.check_key, key)
+			local Success, Result = pcall(Api.check_key, Key)
 
 			if Success and Result and Result.code == "KEY_VALID" then
-				local data = Result.data
+				local Data = Result.data
 
-				getgenv().key_expire = data.auth_expire
-				getgenv().key_note = data.note
-				getgenv().key_executions = data.total_executions or 0
+				getgenv().key_expire = Data.auth_expire
+				getgenv().key_note = Data.note
+				getgenv().key_executions = Data.total_executions or 0
 
 				UpdateKeyInfo()
 
-				local expire = data.auth_expire
+				local Expire = Data.auth_expire
 
-				if expire and expire > 0 then
-					local remaining = expire - os.time()
+				if Expire and Expire > 0 then
+					local Remaining = Expire - os.time()
 
-					if remaining > 0 and remaining <= ExpireThreshold then
+					if Remaining > 0 and Remaining <= ExpireThreshold then
 						ShowKeyWarning()
-					elseif remaining > ExpireThreshold then
+					elseif Remaining > ExpireThreshold then
 						HideKeyWarning()
 					end
-				elseif expire == 0 then
+				elseif Expire == 0 then
 					HideKeyWarning()
 				end
 			end
@@ -1423,8 +1425,8 @@ local Library do
 
 		local function InitLabels(v)
 			if v then
-				local expire = KeyVars.get("key_expire")
-				local Text = (expire and expire > 0) and ToTime(expire - os.time()) or "Lifetime"
+				local Expire = KeyVars.get("key_expire")
+				local Text = (Expire and Expire > 0) and ToTime(Expire - os.time()) or "Lifetime"
 
 				Labels = {
 					Status = Section:Label("Status: Active", ""),
@@ -1443,6 +1445,7 @@ local Library do
 		end
 
 		local HasKey = KeyVars.current_key and KeyVars.current_key ~= ""
+
 		InitLabels(HasKey)
 
 		Library:Thread(LPH_NO_VIRTUALIZE(function()
@@ -1994,11 +1997,13 @@ local Library do
 			local CircleTrans = Value and 0 or 0.4
 
 			Items["Text"]:Tween(nil, {TextTransparency = TextTrans})
+
 			Items["Circle"]:Tween(TweenInfo.new(Library.Tween.Time + 0.2, Enum.EasingStyle.Quart, Library.Tween.Direction), {
 				AnchorPoint = Value and Vector2New(1, 0) or Vector2New(0, 0),
 				Position = Value and UDim2New(1, -3, 0, 3) or UDim2New(0, 3, 0, 3),
 				BackgroundTransparency = CircleTrans,
 			})
+
 			Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = ThemeKey})
 			Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme[ThemeKey]})
 
@@ -2948,6 +2953,7 @@ local Library do
 
 			if not NewTween or not NewTween.Tween then
 				Debounce = false
+
 				Items["ColorpickerWindow"].Instance.Visible = Colorpicker.IsOpen
 				wait(0.2)
 				Items["ColorpickerWindow"].Instance.Parent = not Colorpicker.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
@@ -2956,6 +2962,7 @@ local Library do
 
 			NewTween.Tween.Completed:Connect(function()
 				Debounce = false
+
 				Items["ColorpickerWindow"].Instance.Visible = Colorpicker.IsOpen
 				wait(0.2)
 				Items["ColorpickerWindow"].Instance.Parent = not Colorpicker.IsOpen and Library.UnusedHolder.Instance or Library.Holder.Instance
@@ -2968,6 +2975,7 @@ local Library do
 
 		function Colorpicker:Update(IsFromAlpha)
 			local Hue, Saturation, Value = Colorpicker.Hue, Colorpicker.Saturation, Colorpicker.Value
+
 			Colorpicker.Color = FromHSV(Hue, Saturation, Value)
 			Colorpicker.HexValue = Colorpicker.Color:ToHex()
 
@@ -3009,6 +3017,7 @@ local Library do
 			local PaletteInst = Items["Palette"].Instance
 			local PaletteSize = PaletteInst.AbsoluteSize
 			local PalettePos = PaletteInst.AbsolutePosition
+
 			local SlideX = (Input.Position.X - PalettePos.X) / PaletteSize.X
 			local SlideY = (Input.Position.Y - PalettePos.Y) / PaletteSize.Y
 
@@ -3063,6 +3072,7 @@ local Library do
 			Items["AlphaDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
 				Position = UDim2New(0.5, 0, MathClamp(SlideY, 0, 0.98), 0)
 			})
+
 			Colorpicker:Update(true)
 		end
 
@@ -3090,6 +3100,7 @@ local Library do
 			Items["AlphaDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
 				Position = UDim2New(0.5, 0, AlphaPositionY, 0)
 			})
+
 			Colorpicker:Update()
 		end
 
@@ -4697,12 +4708,14 @@ local Library do
 
 			if not NewTween or not NewTween.Tween then
 				Debounce = false
+
 				Items["MainFrame"].Instance.Visible = Window.IsOpen
 				return
 			end
 
 			NewTween.Tween.Completed:Connect(function()
 				Debounce = false
+
 				Items["MainFrame"].Instance.Visible = Window.IsOpen
 			end)
 		end
@@ -4994,7 +5007,7 @@ local Library do
 				Items["Liner"]:Tween(nil, {BackgroundTransparency = 0, Size = UDim2New(0, 6, 1, -20)})
 				Items["Inactive"]:Tween(nil, {BackgroundTransparency = 0})
 				Items["Text"]:Tween(nil, {TextTransparency = 0, Position = UDim2New(0, 12, 0.5, 0)})
-
+				wait()
 				Library.CurrentPage = Page
 			else
 				Items["Liner"]:Tween(nil, {BackgroundTransparency = 1, Size = UDim2New(0, 6, 0, 0)})
@@ -5393,11 +5406,13 @@ local Library do
 			local CircleTrans = Value and 0 or 0.4
 
 			Items["Text"]:Tween(nil, {TextTransparency = TextTrans})
+
 			Items["Circle"]:Tween(TweenInfo.new(Library.Tween.Time + 0.2, Enum.EasingStyle.Quart, Library.Tween.Direction), {
 				AnchorPoint = Value and Vector2New(1, 0) or Vector2New(0, 0),
 				Position = Value and UDim2New(1, -3, 0, 3) or UDim2New(0, 3, 0, 3),
 				BackgroundTransparency = CircleTrans,
 			})
+
 			Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = ThemeKey})
 			Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme[ThemeKey]})
 
@@ -5501,6 +5516,7 @@ local Library do
 			if Toggle.Disabled then
 				return
 			end
+
 			Toggle:Set(Value)
 		end
 
@@ -5510,6 +5526,7 @@ local Library do
 					Item.Instance:Destroy()
 				end
 			end
+
 			return Toggle
 		end
 
@@ -5788,6 +5805,7 @@ local Library do
 					Item.Instance:Destroy()
 				end
 			end
+
 			return Checkbox
 		end
 
@@ -5957,7 +5975,7 @@ local Library do
 			SuggestedDecimals = math.max(math.ceil(math.log10(Range)) - 2, 0)
 		end
 
-		local 		Slider = {
+		local Slider = {
 			Window = self.Window,
 			Page = self.Page,
 			Section = self,
@@ -6101,7 +6119,8 @@ local Library do
 			PlaceholderColor3 = Library.Theme["Inactive Text"],
 			ClearTextOnFocus = false,
 			CursorPosition = -1,
-			AutomaticSize = Enum.AutomaticSize.None,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			TextWrapped = false,
 			ZIndex = 4
 		}):AddToTheme({TextColor3 = 'Text'})
 
@@ -6194,6 +6213,7 @@ local Library do
 			if Slider.Disabled then
 				return
 			end
+
 			SliderFocused = false
 
 			local Text = Items["Value"].Instance.Text
@@ -6250,6 +6270,7 @@ local Library do
 				local Offset = ClampedValue - Slider.Min
 				local StepFrac = Offset / Slider.Decimals
 				local NearestStep = MathFloor(StepFrac + 0.5)
+
 				Slider.Value = Slider.Min + NearestStep * Slider.Decimals
 				Slider.Value = MathClamp(Slider.Value, Slider.Min, Slider.Max)
 			else
@@ -6373,6 +6394,7 @@ local Library do
 					Item.Instance:Destroy()
 				end
 			end
+
 			return Slider
 		end
 
@@ -6685,6 +6707,7 @@ local Library do
 
 		local function UpdatePosition()
 			if not Library or not Items["OptionHolder"].Instance.Parent then return end
+
 			local Scale = (Library.Holder.Instance:FindFirstChildOfClass("UIScale") or {Scale = 1}).Scale
 			local Button = Items["RealDropdown"].Instance
 			local MainFrame = Dropdown.Window.Items["MainFrame"].Instance
@@ -6720,7 +6743,7 @@ local Library do
 			local TweenInfoArgs = {Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction}
 
 			if Dropdown.IsOpen then
-				wait(0)
+				wait()
 				Items["Icon"]:Tween(TweenInfo.new(unpack(TweenInfoArgs)), {
 					Rotation = 90,
 					ImageColor3 = Theme["Accent"]
@@ -7072,6 +7095,7 @@ local Library do
 			if Dropdown.Disabled then
 				return
 			end
+
 			Dropdown:Set(Value)
 		end
 
@@ -7445,6 +7469,8 @@ local Library do
 			PlaceholderColor3 = Library.Theme["Inactive Text"],
 			ClearTextOnFocus = false,
 			CursorPosition = -1,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			TextWrapped = false,
 			ZIndex = 2
 		}):AddToTheme({TextColor3 = 'Text', PlaceholderColor3 = 'Inactive Text'})
 
@@ -7524,6 +7550,7 @@ local Library do
 				if Textbox.Disabled then
 					return
 				end
+
 				if PressedEnterQuestionMark then
 					Textbox:Set(InputInstance.Text)
 				end
@@ -7533,6 +7560,7 @@ local Library do
 				if Textbox.Disabled then
 					return
 				end
+
 				Textbox:Set(InputInstance.Text)
 			end)
 		end
@@ -7545,6 +7573,7 @@ local Library do
 			if Textbox.Disabled then
 				return
 			end
+
 			Textbox:Set(Value)
 		end
 
