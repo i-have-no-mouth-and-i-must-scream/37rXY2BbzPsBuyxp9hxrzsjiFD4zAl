@@ -1558,7 +1558,7 @@ local Library do
 	Library.CheckLifetime = function(self, Element, ElementType)
 		if Element.Lifetime then
 			if not self:IsLifetime() then
-				if not self.UIReady then
+				if not self.UILoadded then
 					return true
 				end
 
@@ -4854,8 +4854,8 @@ local Library do
 
 		Window:SetOpen(true)
 
-		delay(3, function()
-			Library.UIReady = true
+		delay(0.3, function()
+			Library.UILoadded = true
 		end)
 
 		return setmetatable(Window, Library)
