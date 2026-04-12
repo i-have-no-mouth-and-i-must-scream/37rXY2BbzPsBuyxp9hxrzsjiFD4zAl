@@ -1285,7 +1285,7 @@ local Library do
 		}
 
 		local WarningFrame = nil
-		local ExpireThreshold = 1800
+		local ExpireThreshold = 550
 
 		local ToTime do
 			local UnitMultipliers = {
