@@ -1843,6 +1843,10 @@ local Library do
 	Library.CheckForAutoLoad = function(self)
 		local AutoLoadPath = Library.Folders_Path.Directory .. "/autoload.json"
 
+		delay(0.3, function()
+			Library.UILoadded = true
+		end)
+
 		if not isfile(AutoLoadPath) then
 			return
 		end
@@ -4853,10 +4857,6 @@ local Library do
 		end
 
 		Window:SetOpen(true)
-
-		delay(0.3, function()
-			Library.UILoadded = true
-		end)
 
 		return setmetatable(Window, Library)
 	end
