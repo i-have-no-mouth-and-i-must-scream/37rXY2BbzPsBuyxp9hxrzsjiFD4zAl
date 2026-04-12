@@ -4503,7 +4503,7 @@ local Library do
 				Parent = Items["MainFrame"].Instance,
 				Name = "\0",
 				Size = UDim2New(0, 23, 0, 23),
-				Position = UDim2New(1, -40, 0, -1.5),
+				Position = UDim2New(1, -40, 0, -1.75),
 				AnchorPoint = Vector2New(1, 0),
 				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
