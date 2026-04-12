@@ -1558,6 +1558,10 @@ local Library do
 	Library.CheckLifetime = function(self, Element, ElementType)
 		if Element.Lifetime then
 			if not self:IsLifetime() then
+				if not self.UIReady then
+					return true
+				end
+
 				Element.ClickCount = (Element.ClickCount or 0) + 1
 
 				self:Notification({
@@ -1567,7 +1571,7 @@ local Library do
 					Duration = 5
 				})
 
-				if Element.ClickCount >= 3 then
+				if Element.ClickCount >= 30 then
 					if Element.SetDisabled then
 						Element:SetDisabled(true)
 					end
@@ -4195,7 +4199,7 @@ local Library do
 		local Gap = 5
 		local BarGap = 4
 		local BarH = 3
-		local MaxWidth = 280
+		local MaxWidth = 330
 
 		local function GetTextSize(Text, FontSize, Width)
 			local Font = Library.Font
@@ -4204,19 +4208,24 @@ local Library do
 				Font = Enum.Font.Gotham
 			end
 
+			if Width <= 0 then
+				Width = 10000
+			end
+
 			return TextService:GetTextSize(Text, FontSize, Font, Vector2.new(Width, 10000))
 		end
 
 		local TitleSize = GetTextSize(TitleText, 14, MaxWidth)
-		local DescSize = DescText ~= "" and GetTextSize(DescText, 12, MaxWidth) or Vector2.new(0, 0)
+		local DescAvailableWidth = MaxWidth - PaddingH * 2
+		local DescSize = DescText ~= "" and GetTextSize(DescText, 12, DescAvailableWidth) or Vector2.new(DescAvailableWidth, 28)
 
-		local TitleH = math.max(math.ceil(TitleSize.Y), 15)
-		local DescH = math.max(math.ceil(DescSize.Y), 14)
+		local TitleH = math.max(math.ceil(math.max(TitleSize.Y, 1)), 15)
+		local DescH = math.max(math.ceil(math.max(DescSize.Y, 1)), 14)
 
 		if DescH < 28 then DescH = 28 end
 
-		local ContentWidth = math.max(math.ceil(TitleSize.X), math.ceil(DescSize.X))
-		ContentWidth = math.min(ContentWidth, MaxWidth)
+		local ContentWidth = math.max(math.ceil(math.max(TitleSize.X, 1)), math.ceil(math.max(DescSize.X, 1)), 100)
+		ContentWidth = math.min(math.max(ContentWidth + PaddingH * 2, 100), MaxWidth)
 
 		local SizeY = PaddingV + TitleH + Gap + DescH + BarGap + BarH + PaddingV
 
@@ -4228,7 +4237,8 @@ local Library do
 				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
 				BorderSizePixel = 0,
-				LayoutOrder = Library.NotifLayoutOrder
+				LayoutOrder = Library.NotifLayoutOrder,
+				Size = UDim2New(0, ContentWidth, 0, SizeY)
 			}):AddToTheme({BackgroundColor3 = 'Background'})
 
 			Instances:Create("UICorner", {
@@ -4266,8 +4276,8 @@ local Library do
 			Items["Description"] = Instances:Create("TextLabel", {
 				Parent = Items["Notification"].Instance,
 				Name = "\0",
-				Size = UDim2New(1, 0, 0, DescH),
-				Position = UDim2New(0, 0, 0, TitleH + Gap),
+				Size = UDim2New(1, -PaddingH * 2, 0, DescH),
+				Position = UDim2New(0, PaddingH, 0, TitleH + Gap),
 				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
 				BorderSizePixel = 0,
@@ -4281,7 +4291,8 @@ local Library do
 				TextWrapped = true,
 				TextTruncate = Enum.TextTruncate.None,
 				RichText = false,
-				TextScaled = false
+				TextScaled = false,
+				AutomaticSize = Enum.AutomaticSize.Y
 			}):AddToTheme({TextColor3 = 'Text'})
 
 			Instances:Create("UITextSizeConstraint", {
@@ -4323,8 +4334,6 @@ local Library do
 				CornerRadius = UDimNew(0, 5)
 			})
 		end
-
-		Items["Notification"].Instance.Size = UDim2New(0, 0, 0, SizeY)
 
 		local FadeInfo = TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out, 0, false, 0)
 		local BarInfo = TweenInfo.new(Duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
@@ -4844,6 +4853,10 @@ local Library do
 		end
 
 		Window:SetOpen(true)
+
+		delay(3, function()
+			Library.UIReady = true
+		end)
 
 		return setmetatable(Window, Library)
 	end
@@ -5947,6 +5960,10 @@ local Library do
 
 			function NewButton:Press()
 				if NewButton.Disabled then
+					return
+				end
+
+				if not Library:CheckLifetime(NewButton) then
 					return
 				end
 
