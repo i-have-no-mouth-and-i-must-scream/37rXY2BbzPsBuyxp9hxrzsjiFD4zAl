@@ -1643,7 +1643,7 @@ local Library do
 	Library.LoadConfig = function(self, Config)
 		local Decoded = HttpService:JSONDecode(Config)
 
-		self._LoadingConfig = true
+		self.LoadingConfig = true
 
 		local Success, Result = Library:SafeCall(function()
 			for Index, Value in Decoded do 
@@ -1674,7 +1674,7 @@ local Library do
 			end
 		end)
 
-		self._LoadingConfig = false
+		self.LoadingConfig = false
 		return Success, Result
 	end
 
@@ -1833,7 +1833,7 @@ local Library do
 	end
 
 	Library.SaveAutoloadIfEnabled = function(self)
-		if not self._LoadingConfig and self.AutoSave then
+		if not self.LoadingConfig and self.AutoSave then
 			pcall(function()
 				writefile(self.Folders.Directory .. "/autoload.json", self:GetConfig())
 			end)
@@ -1842,10 +1842,6 @@ local Library do
 
 	Library.CheckForAutoLoad = function(self)
 		local AutoLoadPath = Library.Folders_Path.Directory .. "/autoload.json"
-
-		delay(0.3, function()
-			Library.UILoadded = true
-		end)
 
 		if not isfile(AutoLoadPath) then
 			return
@@ -1875,7 +1871,6 @@ local Library do
 			})
 		end
 	end
-
 	Library.Sections.Toggle = function(self, Data)
 		Data = Data or {}
 
@@ -7891,204 +7886,6 @@ local Library do
 		end
 
 		do
-			local ConfigHub_Section = Settings:Section({Name = "Config Hub", Side = 2})
-
-			local ConfigFolder = Library:GetFolder()
-			local AutoloadPath = Library.Folders_Path.Directory .. "/autoload.json"
-
-			local function NotifySuccessConfig(Message)
-				Library:Notification({
-					Name = "Success",
-					Description = Message,
-					Color = Color3.fromRGB(0, 255, 0),
-					Duration = 5
-				})
-			end
-
-			local function NotifyErrorConfig(Message)
-				Library:Notification({
-					Name = "Error",
-					Description = Message,
-					Color = Color3.fromRGB(255, 0, 0),
-					Duration = 5
-				})
-			end
-
-			do
-				local Config_Name
-				local Config_Selected
-
-				local Config_Dropdown = ConfigHub_Section:Dropdown({
-					Name = "Config Select",
-					Flag = "Config Select",
-					Description = "List of the configs",
-					Items = {},
-					Multi = false,
-					Callback = function(Value)
-						Config_Selected = Value
-					end
-				})
-
-				ConfigHub_Section:Textbox({
-					Name = "Config Name",
-					Flag = "Config Name",
-					Description = "Name of the config",
-					Placeholder = "Config name...",
-					Finished = true,
-					Callback = function(Value)
-						Config_Name = Value
-					end
-				})
-
-				ConfigHub_Section:Button():Add("Create", function()
-					if not Config_Name or Config_Name == "" then
-						return
-					end
-
-					local Success, Error = pcall(function()
-						writefile(ConfigFolder .. Config_Name .. ".json", Library:GetConfig())
-					end)
-
-					if Success then
-						Library:RefreshConfigsList(Config_Dropdown)
-						NotifySuccessConfig("Succesfully created config: " .. Config_Name)
-					else
-						NotifyErrorConfig("Failed to create config: " .. Config_Name .. " " .. tostring(Error))
-					end
-				end):Add("Delete", function()
-					if not Config_Selected then
-						NotifyErrorConfig("Please select a config first")
-						return
-					end
-
-					local ConfigPath = ConfigFolder .. Config_Selected .. ".json"
-					local Success, Error = pcall(function()
-						if isfile(ConfigPath) then
-							delfile(ConfigPath)
-						end
-					end)
-
-					if Success then
-						Library:RefreshConfigsList(Config_Dropdown)
-						NotifySuccessConfig("Succesfully deleted config: " .. Config_Selected)
-					else
-						NotifyErrorConfig("Failed to delete config: " .. Config_Selected .. " " .. tostring(Error))
-					end
-				end)
-
-				ConfigHub_Section:Button():Add("Load", function()
-					if not Config_Selected then
-						NotifyErrorConfig("Please select a config first")
-						return
-					end
-
-					local ConfigPath = ConfigFolder .. Config_Selected .. ".json"
-
-					if not isfile(ConfigPath) then
-						NotifyErrorConfig("Failed to find config: " .. Config_Selected)
-						return
-					end
-
-					local ConfigContent = readfile(ConfigPath)
-					local Success, Error = Library:LoadConfig(ConfigContent)
-
-					if Success then
-						NotifySuccessConfig("Succesfully loaded config: " .. Config_Selected)
-					else
-						NotifyErrorConfig("Failed to load config: " .. (Config_Selected or "Unknown") .. " " .. tostring(Error))
-					end
-				end):Add("Save", function()
-					if not Config_Selected then
-						NotifyErrorConfig("Please select a config first")
-						return
-					end
-
-					local ConfigPath = ConfigFolder .. Config_Selected .. ".json"
-
-					if not isfile(ConfigPath) then
-						NotifyErrorConfig("Failed to find config: " .. Config_Selected)
-						return
-					end
-
-					local Success, Error = pcall(function()
-						writefile(ConfigPath, Library:GetConfig())
-					end)
-
-					if Success then
-						NotifySuccessConfig("Succesfully saved config: " .. Config_Selected)
-					else
-						NotifyErrorConfig("Failed to save config: " .. Config_Selected .. " " .. tostring(Error))
-					end
-				end)
-
-				ConfigHub_Section:Button():Add("Refresh", function()
-					Library:RefreshConfigsList(Config_Dropdown)
-				end)
-
-				ConfigHub_Section:Button():Add("Set Autoload", function()
-					local Success, Error = pcall(function()
-						writefile(AutoloadPath, Library:GetConfig())
-					end)
-
-					if Success then
-						NotifySuccessConfig("Autoload set to current config")
-					else
-						NotifyErrorConfig("Failed to set autoload: " .. tostring(Error))
-					end
-				end):Add("Remove Autoload", function()
-					local Success, Error = pcall(function()
-						writefile(AutoloadPath, "")
-					end)
-
-					if Success then
-						NotifySuccessConfig("Succesfully removed autoload")
-					else
-						NotifyErrorConfig("Failed to remove autoload: " .. tostring(Error))
-					end
-				end)
-
-				local Pasted_Config = ""
-
-				ConfigHub_Section:Textbox({
-					Name = "Paste Shared Config",
-					Flag = "Paste Shared Config",
-					Description = "Paste config here",
-					Placeholder = "Paste config here...",
-					Finished = true,
-					Callback = function(Value)
-						Pasted_Config = Value
-					end
-				})
-
-				ConfigHub_Section:Button():Add("Share Config", function()
-					local CurrentConfig = Library:GetConfig()
-					local Success, Error = pcall(setclipboard, CurrentConfig)
-
-					if Success then
-						NotifySuccessConfig("Config copied to clipboard")
-					else
-						NotifyErrorConfig("Failed to copy config: " .. tostring(Error))
-					end
-				end):Add("Import Pasted", function()
-					if not Pasted_Config or Pasted_Config == "" then
-						NotifyErrorConfig("No config pasted")
-						return
-					end
-
-					local Success, Error = Library:LoadConfig(Pasted_Config)
-
-					if Success then
-						NotifySuccessConfig("Succesfully imported config")
-					else
-						NotifyErrorConfig("Failed to import config: " .. tostring(Error))
-					end
-				end)
-
-				Library:RefreshConfigsList(Config_Dropdown)
-			end
-		end
-
-		do
 			local MenuSetting_Section = Settings:Section({Name = "Menu Setting", Side = 2})
 
 			do
@@ -8221,6 +8018,204 @@ local Library do
 						Library.AutoSave = Value
 					end
 				})
+			end
+		end
+
+		do
+			local ScriptConfig_Section = Settings:Section({Name = "Script Config", Side = 2})
+
+			local ConfigFolder = Library:GetFolder()
+			local AutoloadPath = Library.Folders_Path.Directory .. "/autoload.json"
+
+			local function NotifySuccessConfig(Message)
+				Library:Notification({
+					Name = "Success",
+					Description = Message,
+					Color = Color3.fromRGB(0, 255, 0),
+					Duration = 5
+				})
+			end
+
+			local function NotifyErrorConfig(Message)
+				Library:Notification({
+					Name = "Error",
+					Description = Message,
+					Color = Color3.fromRGB(255, 0, 0),
+					Duration = 5
+				})
+			end
+
+			do
+				local Config_Name
+				local Config_Selected
+
+				local Config_Dropdown = ScriptConfig_Section:Dropdown({
+					Name = "Config Select",
+					Flag = "Config Select",
+					Description = "List of the configs",
+					Items = {},
+					Multi = false,
+					Callback = function(Value)
+						Config_Selected = Value
+					end
+				})
+
+				ScriptConfig_Section:Textbox({
+					Name = "Config Name",
+					Flag = "Config Name",
+					Description = "Name of the config",
+					Placeholder = "Config name...",
+					Finished = true,
+					Callback = function(Value)
+						Config_Name = Value
+					end
+				})
+
+				ScriptConfig_Section:Button():Add("Create", function()
+					if not Config_Name or Config_Name == "" then
+						return
+					end
+
+					local Success, Error = pcall(function()
+						writefile(ConfigFolder .. Config_Name .. ".json", Library:GetConfig())
+					end)
+
+					if Success then
+						Library:RefreshConfigsList(Config_Dropdown)
+						NotifySuccessConfig("Succesfully created config: " .. Config_Name)
+					else
+						NotifyErrorConfig("Failed to create config: " .. Config_Name .. " " .. tostring(Error))
+					end
+				end):Add("Delete", function()
+					if not Config_Selected then
+						NotifyErrorConfig("Please select a config first")
+						return
+					end
+
+					local ConfigPath = ConfigFolder .. Config_Selected .. ".json"
+					local Success, Error = pcall(function()
+						if isfile(ConfigPath) then
+							delfile(ConfigPath)
+						end
+					end)
+
+					if Success then
+						Library:RefreshConfigsList(Config_Dropdown)
+						NotifySuccessConfig("Succesfully deleted config: " .. Config_Selected)
+					else
+						NotifyErrorConfig("Failed to delete config: " .. Config_Selected .. " " .. tostring(Error))
+					end
+				end)
+
+				ScriptConfig_Section:Button():Add("Load", function()
+					if not Config_Selected then
+						NotifyErrorConfig("Please select a config first")
+						return
+					end
+
+					local ConfigPath = ConfigFolder .. Config_Selected .. ".json"
+
+					if not isfile(ConfigPath) then
+						NotifyErrorConfig("Failed to find config: " .. Config_Selected)
+						return
+					end
+
+					local ConfigContent = readfile(ConfigPath)
+					local Success, Error = Library:LoadConfig(ConfigContent)
+
+					if Success then
+						NotifySuccessConfig("Succesfully loaded config: " .. Config_Selected)
+					else
+						NotifyErrorConfig("Failed to load config: " .. (Config_Selected or "Unknown") .. " " .. tostring(Error))
+					end
+				end):Add("Save", function()
+					if not Config_Selected then
+						NotifyErrorConfig("Please select a config first")
+						return
+					end
+
+					local ConfigPath = ConfigFolder .. Config_Selected .. ".json"
+
+					if not isfile(ConfigPath) then
+						NotifyErrorConfig("Failed to find config: " .. Config_Selected)
+						return
+					end
+
+					local Success, Error = pcall(function()
+						writefile(ConfigPath, Library:GetConfig())
+					end)
+
+					if Success then
+						NotifySuccessConfig("Succesfully saved config: " .. Config_Selected)
+					else
+						NotifyErrorConfig("Failed to save config: " .. Config_Selected .. " " .. tostring(Error))
+					end
+				end)
+
+				ScriptConfig_Section:Button():Add("Refresh", function()
+					Library:RefreshConfigsList(Config_Dropdown)
+				end)
+
+				ScriptConfig_Section:Button():Add("Set Autoload", function()
+					local Success, Error = pcall(function()
+						writefile(AutoloadPath, Library:GetConfig())
+					end)
+
+					if Success then
+						NotifySuccessConfig("Autoload set to current config")
+					else
+						NotifyErrorConfig("Failed to set autoload: " .. tostring(Error))
+					end
+				end):Add("Remove Autoload", function()
+					local Success, Error = pcall(function()
+						writefile(AutoloadPath, "")
+					end)
+
+					if Success then
+						NotifySuccessConfig("Succesfully removed autoload")
+					else
+						NotifyErrorConfig("Failed to remove autoload: " .. tostring(Error))
+					end
+				end)
+
+				local Pasted_Config = ""
+
+				ScriptConfig_Section:Textbox({
+					Name = "Paste Shared Config",
+					Flag = "Paste Shared Config",
+					Description = "Paste config here",
+					Placeholder = "Paste config here...",
+					Finished = true,
+					Callback = function(Value)
+						Pasted_Config = Value
+					end
+				})
+
+				ScriptConfig_Section:Button():Add("Share Config", function()
+					local CurrentConfig = Library:GetConfig()
+					local Success, Error = pcall(setclipboard, CurrentConfig)
+
+					if Success then
+						NotifySuccessConfig("Config copied to clipboard")
+					else
+						NotifyErrorConfig("Failed to copy config: " .. tostring(Error))
+					end
+				end):Add("Import Pasted", function()
+					if not Pasted_Config or Pasted_Config == "" then
+						NotifyErrorConfig("No config pasted")
+						return
+					end
+
+					local Success, Error = Library:LoadConfig(Pasted_Config)
+
+					if Success then
+						NotifySuccessConfig("Succesfully imported config")
+					else
+						NotifyErrorConfig("Failed to import config: " .. tostring(Error))
+					end
+				end)
+
+				Library:RefreshConfigsList(Config_Dropdown)
 			end
 		end
 	end
