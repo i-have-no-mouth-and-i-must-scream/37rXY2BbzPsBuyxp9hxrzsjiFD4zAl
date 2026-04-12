@@ -1296,7 +1296,9 @@ local Library do
 			}
 
 			function ToTime(v)
-				if not v or v <= 0 then
+				if not v then
+					return "No Key"
+				elseif v < 0 then
 					return "Lifetime"
 				end
 
@@ -1371,12 +1373,10 @@ local Library do
 				RichText = false,
 				Size = UDim2New(1, -20, 0, 40),
 				Text = "Son, your key is expiring soon 😭🙏",
-				TextColor3 = FromRGB(255, 255, 255),
+				TextColor3 = FromRGB(0, 0, 0),
 				TextSize = 14,
-				TextTruncate = Enum.TextTruncate.None,
 				TextWrapped = true,
-				TextXAlignment = Enum.TextXAlignment.Center,
-				TextYAlignment = Enum.TextYAlignment.Center
+				ZIndex = 10000
 			})
 		end
 
@@ -1437,7 +1437,7 @@ local Library do
 			else
 				Labels = {
 					Status = Section:Label("Status: No Key", ""),
-					Expires = Section:Label("Expires: N/A", ""),
+					Expires = Section:Label("Expires: Lifetime", ""),
 					Executions = Section:Label("Executions: N/A", ""),
 					Note = Section:Label("Note: N/A", "")
 				}
@@ -1547,6 +1547,37 @@ local Library do
 		local FlagNumber = self.UnnamedFlags + 1
 
 		return StringFormat("flag_number_%s_%s", FlagNumber, HttpService:GenerateGUID(false))
+	end
+
+	Library.IsLifetime = function(self)
+		local Expire = getgenv().key_expire
+
+		return Expire and Expire == -1
+	end
+
+	Library.CheckLifetime = function(self, Element, ElementType)
+		if Element.Lifetime then
+			if not self:IsLifetime() then
+				Element.ClickCount = (Element.ClickCount or 0) + 1
+
+				self:Notification({
+					Name = "Lifetime Required",
+					Description = "This feature is only available for Solix Hub Lifetime users, Buy Lifetime key at https://solixhub.com",
+					Color = Color3.fromRGB(255, 0, 0),
+					Duration = 5
+				})
+
+				if Element.ClickCount >= 3 then
+					if Element.SetDisabled then
+						Element:SetDisabled(true)
+					end
+				end
+
+				return false
+			end
+		end
+
+		return true
 	end
 
 	Library.AddToTheme = function(self, Item, Properties)
@@ -1851,6 +1882,7 @@ local Library do
 			Default = Data.Default or Data.default or false,
 			Tooltip = Data.Tooltip or Data.tooltip or nil,
 			Callback = Data.Callback or Data.callback or function() end,
+			Lifetime = Data.Lifetime or Data.lifetime or false,
 
 			Value = false,
 			Disabled = false,
@@ -1986,6 +2018,10 @@ local Library do
 
 		function Toggle:Set(Value)
 			if Toggle.Disabled then
+				return
+			end
+
+			if not Library:CheckLifetime(Toggle) then
 				return
 			end
 
@@ -5254,12 +5290,13 @@ local Library do
 			Default = Data.Default or Data.default or false,
 			Tooltip = Data.Tooltip or Data.tooltip or nil,
 			Callback = Data.Callback or Data.callback or function() end,
+			Lifetime = Data.Lifetime or Data.lifetime or false,
 
 			Value = false,
 			Disabled = false,
 		}
 
-		local Items = {} do
+		local Items = {} do 
 			Items["Toggle"] = Instances:Create("Frame", {
 				Parent = Toggle.Section.Items["Content"].Instance,
 				Name = "\0",
@@ -5395,6 +5432,10 @@ local Library do
 
 		function Toggle:Set(Value)
 			if Toggle.Disabled then
+				return
+			end
+
+			if not Library:CheckLifetime(Toggle) then
 				return
 			end
 
@@ -5548,6 +5589,7 @@ local Library do
 			Default = Data.Default or Data.default or false,
 			Tooltip = Data.Tooltip or Data.tooltip or nil,
 			Callback = Data.Callback or Data.callback or function() end,
+			Lifetime = Data.Lifetime or Data.lifetime or false,
 
 			Value = false,
 			Disabled = false,
@@ -5682,6 +5724,10 @@ local Library do
 
 		function Checkbox:Set(Value)
 			if Checkbox.Disabled then
+				return
+			end
+
+			if not Library:CheckLifetime(Checkbox) then
 				return
 			end
 
@@ -5842,9 +5888,12 @@ local Library do
 			VerticalFlex = Enum.UIFlexAlignment.Fill
 		})
 
-		function Button:Add(Name, Callback)
+		function Button:Add(Name, Callback, Data)
+			Data = Data or {}
+
 			local NewButton = {
-				Disabled = false
+				Disabled = false,
+				Lifetime = Data.Lifetime or Data.lifetime or false
 			}
 
 			local NewItems = {}
@@ -5898,6 +5947,10 @@ local Library do
 
 			function NewButton:Press()
 				if NewButton.Disabled then
+					return
+				end
+
+				if not Library:CheckLifetime(NewButton) then
 					return
 				end
 
@@ -5991,6 +6044,7 @@ local Library do
 			Decimals = Decimals,
 			DisplayDecimals = AutoDecimals and SuggestedDecimals or 0,
 			Callback = Data.Callback or Data.callback or function() end,
+			Lifetime = Data.Lifetime or Data.lifetime or false,
 
 			Value = 0,
 			Sliding = false,
@@ -6260,8 +6314,12 @@ local Library do
 		end
 
 		function Slider:Set(Value)
-			if Slider.Disabled then 
-				return 
+			if Slider.Disabled then
+				return
+			end
+
+			if not Library:CheckLifetime(Slider) then
+				return
 			end
 
 			local ClampedValue = MathClamp(Value, Slider.Min, Slider.Max)
@@ -6284,7 +6342,7 @@ local Library do
 			local DisplayValue = string.format("%g", Slider.Value)
 			Items["Value"].Instance.Text = StringFormat("%s%s", DisplayValue, Slider.Suffix)
 
-			if Slider.Callback then 
+			if Slider.Callback then
 				Library:SafeCall(Slider.Callback, Slider.Value)
 			end
 
@@ -6419,6 +6477,7 @@ local Library do
 			Default = Data.Default or Data.default or nil,
 			Callback = Data.Callback or Data.callback or function() end,
 			Multi = Data.Multi or Data.multi or false,
+			Lifetime = Data.Lifetime or Data.lifetime or false,
 
 			Value = {},
 			Options = {},
@@ -6736,6 +6795,10 @@ local Library do
 				return
 			end
 
+			if not Library:CheckLifetime(Dropdown) then
+				return
+			end
+
 			Dropdown.IsOpen = Bool
 			Debounce = true
 
@@ -6939,6 +7002,10 @@ local Library do
 			end
 
 			function OptionData:Set()
+				if not Library:CheckLifetime(Dropdown) then
+					return
+				end
+
 				OptionData.Selected = not OptionData.Selected
 
 				local Flags = Library.Flags
@@ -7112,6 +7179,7 @@ local Library do
 		Dropdown.Items = Items
 		return Dropdown
 	end
+
 	Library.Sections.Label = function(self, Name, Description, Tooltip)
 		local Label = {
 			Window = self.Window,
@@ -7350,6 +7418,8 @@ local Library do
 			Placeholder = Data.Placeholder or Data.placeholder or "Placeholder",
 			Numeric = Data.Numeric or Data.numeric or false,
 			Finished = Data.Finished or Data.finished or false,
+			Lifetime = Data.Lifetime or Data.lifetime or false,
+
 			Disabled = false,
 
 			Value = ""
@@ -7511,6 +7581,14 @@ local Library do
 		end
 
 		function Textbox:Set(Value)
+			if Textbox.Disabled then
+				return
+			end
+
+			if not Library:CheckLifetime(Textbox, "Textbox") then
+				return
+			end
+
 			local String = tostring(Value)
 
 			if Textbox.Numeric then
@@ -7551,6 +7629,10 @@ local Library do
 					return
 				end
 
+				if not Library:CheckLifetime(Textbox) then
+					return
+				end
+
 				if PressedEnterQuestionMark then
 					Textbox:Set(InputInstance.Text)
 				end
@@ -7558,6 +7640,10 @@ local Library do
 		else
 			Library:Connect(InputInstance:GetPropertyChangedSignal("Text"), function()
 				if Textbox.Disabled then
+					return
+				end
+
+				if not Library:CheckLifetime(Textbox) then
 					return
 				end
 
