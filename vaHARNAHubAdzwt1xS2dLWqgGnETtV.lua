@@ -4487,8 +4487,8 @@ local Library do
 			Items["CloseButton"] = Instances:Create("ImageButton", {
 				Parent = Items["MainFrame"].Instance,
 				Name = "\0",
-				Size = UDim2New(0, 17, 0, 17),
-				Position = UDim2New(1, -8, 0, 8),
+				Size = UDim2New(0, 23, 0, 23),
+				Position = UDim2New(1, -12, 0, 5),
 				AnchorPoint = Vector2New(1, 0),
 				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
@@ -4502,8 +4502,8 @@ local Library do
 			Items["MinimizeButton"] = Instances:Create("ImageButton", {
 				Parent = Items["MainFrame"].Instance,
 				Name = "\0",
-				Size = UDim2New(0, 17, 0, 17),
-				Position = UDim2New(1, -27, 0, 3),
+				Size = UDim2New(0, 23, 0, 23),
+				Position = UDim2New(1, -40, 0, 5),
 				AnchorPoint = Vector2New(1, 0),
 				BackgroundTransparency = 1,
 				BorderColor3 = FromRGB(0, 0, 0),
