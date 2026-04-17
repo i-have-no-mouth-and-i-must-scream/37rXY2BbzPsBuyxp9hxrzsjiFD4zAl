@@ -1286,7 +1286,7 @@ do
 			end
 
 			for BarName, Bar in PlayerSettings.Bars do
-				Objects[Bar.Position .. "BarHolder"] = Utility.CreateObject("Frame", {
+				Objects[BarName .. "BarHolder"] = Utility.CreateObject("Frame", {
 					Parent = Objects["TargetHolder"],
 					Name = "\0",
 					Size = UDim2New(0, 0, 0, 0),
@@ -1301,7 +1301,7 @@ do
 			end
 
 			for BarName, Bar in PlayerSettings.Bars do
-				Objects[Bar.Position .. "TextHolder"] = Utility.CreateObject("Frame", {
+				Objects[BarName .. "TextHolder"] = Utility.CreateObject("Frame", {
 					Parent = Objects["TargetHolder"],
 					Name = "\0",
 					Size = UDim2New(0, 0, 0, 0),
@@ -1316,8 +1316,8 @@ do
 			end
 
 			for BarName, Bar in PlayerSettings.Bars do
-				Objects[Bar.Position .. "Outline"] = Utility.CreateObject("Frame", {
-					Parent = Objects[Bar.Position .. "BarHolder"],
+				Objects[BarName .. "Outline"] = Utility.CreateObject("Frame", {
+					Parent = Objects[BarName .. "BarHolder"],
 					Name = "\0",
 					Size = UDim2New(1, 0, 0, 1),
 					Position = UDim2New(0, 0, 0, 0),
@@ -1331,14 +1331,14 @@ do
 				})
 
 				Utility.CreateObject("UIStroke", {
-					Parent = Objects[Bar.Position .. "Outline"],
+					Parent = Objects[BarName .. "Outline"],
 					Name = "\0",
 					Thickness = 1,
 					LineJoinMode = Enum.LineJoinMode.Miter
 				})
 
-				Objects[Bar.Position] = Utility.CreateObject("Frame", {
-					Parent = Objects[Bar.Position .. "Outline"],
+				Objects[BarName] = Utility.CreateObject("Frame", {
+					Parent = Objects[BarName .. "Outline"],
 					Name = "\0",
 					Size = UDim2New(1, 0, 0, 1),
 					Position = UDim2New(0, 0, 0, 0),
@@ -1351,8 +1351,8 @@ do
 					Visible = true
 				})
 
-				Objects[Bar.Position .. "Gradient"] = Utility.CreateObject("UIGradient", {
-					Parent = Objects[Bar.Position],
+				Objects[BarName .. "Gradient"] = Utility.CreateObject("UIGradient", {
+					Parent = Objects[BarName],
 					Name = "\0",
 					Rotation = 90,
 					Color = ColorSequenceNew{
@@ -1366,8 +1366,8 @@ do
 					}
 				})
 
-				Objects[Bar.Position .. "Text"] = Utility.CreateObject("TextLabel", {
-					Parent = Objects[Bar.Position .. "TextHolder"],
+				Objects[BarName .. "Text"] = Utility.CreateObject("TextLabel", {
+					Parent = Objects[BarName .. "TextHolder"],
 					Name = "\0",
 					Size = UDim2New(1, 0, 0, 0),
 					Position = UDim2New(0, 0, 0, 0),
@@ -1388,13 +1388,13 @@ do
 				})
 
 				local BarTextStroke = Utility.CreateObject("UIStroke", {
-					Parent = Objects[Bar.Position .. "Text"],
+					Parent = Objects[BarName .. "Text"],
 					Name = "\0",
 					Color = Color3FromRGB(0, 0, 0),
 					Thickness = 1,
 					LineJoinMode = Enum.LineJoinMode.Miter
 				})
-				Objects[Bar.Position .. "TextStroke"] = BarTextStroke
+				Objects[BarName .. "TextStroke"] = BarTextStroke
 			end
 
 			Objects["TargetName"] = Utility.CreateObject("TextLabel", {
@@ -1574,7 +1574,7 @@ do
 
 						BarGradientTime[BarName] = (BarGradientTime[BarName] or 0) + FrameDt * GradSpeed
 
-						local BarGradient = Objects[BarInfo.Position .. "Gradient"]
+						local BarGradient = Objects[BarName .. "Gradient"]
 						if BarGradient and BarGradient.Parent then
 							BarGradient.Color = Animation.GetGradientColors(BarInfo.Color, true, BarGradientTime[BarName], GradSpeed)
 						end
@@ -1997,9 +1997,9 @@ do
 				end
 
 				for BarName, BarInfo in PlayerSettings.Bars do
-					local Bar, BarOutline, BarGradient = Objects[BarInfo.Position], Objects[BarInfo.Position .. "Outline"], Objects[BarInfo.Position .. "Gradient"]
+					local Bar, BarOutline, BarGradient = Objects[BarName], Objects[BarName .. "Outline"], Objects[BarName .. "Gradient"]
 					local BarEnabled, BarColor = BarInfo.Enabled, BarInfo.Color
-					local NewParent = Objects[BarInfo.Position .. "BarHolder"]
+					local NewParent = Objects[BarName .. "BarHolder"]
 
 					if BarEnabled and IsPlayer then
 						local TargetValue = BarInfo.Type(Target, CharacterObjects)
@@ -2080,7 +2080,7 @@ do
 						NewParent.Visible = false
 					end
 
-					local BarText = Objects[BarInfo.Position .. "Text"]
+					local BarText = Objects[BarName .. "Text"]
 					local BarTextEnabled, BarTextColor, BarTextTransparency = BarInfo.Text.Enabled, BarInfo.Text.Color, BarInfo.Text.Transparency
 					local AnchorPoints = {
 						["Top"] = Vector2New(0, 0.5),
@@ -2100,7 +2100,7 @@ do
 						BarText.Text = tostring(MathFloor(TextValue)) .. BarInfo.Text.Ending
 						BarText.TextColor3 = VisibilityColor or BarTextColor
 						BarText.TextTransparency = BarTextTransparency
-						local BarTextStroke = Objects[Bar.Position .. "TextStroke"]
+						local BarTextStroke = Objects[BarName .. "TextStroke"]
 						if BarTextStroke then BarTextStroke.Transparency = BarTextTransparency end
 
 						if BarInfo.Text.FollowBar then
@@ -2111,7 +2111,7 @@ do
 							BarText.AnchorPoint = AnchorPoints[BarInfo.Position]
 						else
 							BarText.Visible = true
-							BarText.Parent = Objects[Bar.Position .. "TextHolder"]
+							BarText.Parent = Objects[BarName .. "TextHolder"]
 							BarText.TextXAlignment = TextAlignments[BarInfo.Text.Position]
 							BarText.AnchorPoint = Vector2New(0, 0)
 						end
