@@ -673,6 +673,7 @@ do
 
 		local IsPlayer = IsA(Target, "Player")
 		local IsBasePart = IsA(Target, "BasePart")
+		local IsModel = IsA(Target, "Model")
 		local Objects = TargetInfo.Objects
 		local LastTick = TargetInfo.LastTick
 		local ToolConnection = TargetInfo.ToolConnection
@@ -689,8 +690,11 @@ do
 		if IsPlayer and CharacterObjects.Character then
 			CharacterObjects.HumanoidRootPart = CharacterObjects.Character:FindFirstChild("HumanoidRootPart")
 			CharacterObjects.Humanoid = CharacterObjects.Character:FindFirstChildWhichIsA("Humanoid")
-		elseif not IsPlayer then
-			CharacterObjects.HumanoidRootPart = CharacterObjects.Character
+		elseif IsBasePart then
+			CharacterObjects.HumanoidRootPart = Target
+			CharacterObjects.Humanoid = nil
+		elseif IsModel then
+			CharacterObjects.HumanoidRootPart = CharacterObjects.Character and CharacterObjects.Character.PrimaryPart or FindFirstChildWhichIsA(CharacterObjects.Character, "BasePart", true)
 			CharacterObjects.Humanoid = nil
 		end
 
@@ -1699,8 +1703,10 @@ do
 				end
 			else
 				if not CharacterObjects.HumanoidRootPart then
-					if IsA(Target, "BasePart") then
+					if IsBasePart then
 						CharacterObjects.HumanoidRootPart = Target
+					elseif IsModel then
+						CharacterObjects.HumanoidRootPart = CharacterObjects.Character and CharacterObjects.Character.PrimaryPart or FindFirstChildWhichIsA(CharacterObjects.Character, "BasePart", true)
 					elseif CharacterObjects.Character and CharacterObjects.Character.PrimaryPart then
 						CharacterObjects.HumanoidRootPart = CharacterObjects.Character.PrimaryPart
 					end
@@ -1718,6 +1724,8 @@ do
 				if TargetInfo.SkeletonLines then for _, b in TargetInfo.SkeletonLines do b.line.Visible = false end end
 				return
 			end
+
+			if not CharacterObjects.HumanoidRootPart then return end
 
 			if TargetInfo.StructureDirty then
 				CharacterObjects.Children = CharacterHelper:GetChildren(CharacterObjects.Character)
