@@ -1,6 +1,6 @@
 local Webhook = {}
 
-local HttpService = cloneref(game:GetService("HttpService"))
+local HttpService = cloneref(game:GetService("HttpService")) or game:GetService("HttpService")
 local Request = request or httprequest or http_request
 
 function Webhook.CreateMessage(Url, Username, Content)
@@ -10,44 +10,48 @@ function Webhook.CreateMessage(Url, Username, Content)
 		embeds = {}
 	}
 
-	return {
-		embeds = {},
+	local embeds = {}
 
-		AddEmbed = function(Title, Color, Description)
-			local embed = {
-				title = Title or "",
-				color = tonumber(Color) or 0,
-				description = Description or "",
-				fields = {},
-				thumbnail = {url = "https://cdn.discordapp.com/attachments/1366160415444439160/1450846645045694474/solix_logo-min_1.png"},
-				footer = {text = "discord.gg/solixhub"},
-				timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-			}
+	local function send()
+		Request({
+			Url = Url,
+			Method = "POST",
+			Headers = {["Content-Type"] = "application/json"},
+			Body = HttpService:JSONEncode(data)
+		})
+	end
 
-			table.insert(data.embeds, embed)
+	local webhook = {}
 
-			return {
-				AddField = function(Name, Value, Inline)
-					table.insert(embed.fields, {
-						name = Name or "",
-						value = Value or "",
-						inline = Inline == true
-					})
-					return embed
-				end
-			}
-		end,
+	function webhook:AddEmbed(title, description)
+		local embed = {
+			title = title or "",
+			color = math.random(0, 16777215),
+			description = description or "",
+			fields = {},
+			thumbnail = {url = "https://cdn.discordapp.com/attachments/1366160415444439160/1450846645045694474/solix_logo-min_1.png"},
+			footer = {text = "discord.gg/solixhub"},
+			timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+		}
 
-		Send = function()
-			local response = Request({
-				Url = Url,
-				Method = "POST",
-				Headers = {["Content-Type"] = "application/json"},
-				Body = HttpService:JSONEncode(data)
+		table.insert(data.embeds, embed)
+		table.insert(embeds, embed)
+
+		local embed = {}
+
+		function embed:AddField(name, value)
+			table.insert(embed.fields, {
+				name = name or "",
+				value = value or ""
 			})
-			return response
 		end
-	}
+
+		return embed
+	end
+	function main:Send()
+		send()
+	end
+	return main
 end
 
 return Webhook
