@@ -27,9 +27,14 @@ if type(Library) ~= "table" or not next(Library) then
 else
 	if type(Library.Unload) == "function" then
 		local Success = pcall(Library.Unload, Library)
+
 		if Success then
 			Library = {}
 			getgenv().Library = Library
+		else
+			for Key, _ in pairs(Library) do
+				Library[Key] = nil
+			end
 		end
 	end
 end
@@ -1832,7 +1837,8 @@ local Library do
 	Library.SaveAutoloadIfEnabled = function(self)
 		if not self.LoadingConfig and self.AutoSave then
 			pcall(function()
-				writefile(self.Folders.Directory .. "/autoload.json", self:GetConfig())
+				local FolderPath = self.Folders or self.Folders_Path
+				writefile((FolderPath and FolderPath.Directory or "solixhub") .. "/autoload.json", self:GetConfig())
 			end)
 		end
 	end
@@ -8062,7 +8068,7 @@ local Library do
 					Flag = "Config Name",
 					Description = "Name of the config",
 					Placeholder = "Config name...",
-					Finished = true,
+					Finished = false,
 					Callback = function(Value)
 						Config_Name = Value
 					end
