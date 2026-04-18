@@ -1,6 +1,6 @@
 local Webhook = {}
 
-local HttpService = cloneref(game:GetService("HttpService")) or game:GetService("HttpService")
+local HttpService = cloneref(game:GetService("HttpService"))
 local Request = request or httprequest or http_request
 
 function Webhook.CreateMessage(Url, Username, Content)
@@ -9,8 +9,6 @@ function Webhook.CreateMessage(Url, Username, Content)
 		content = Content or "",
 		embeds = {}
 	}
-
-	local embeds = {}
 
 	local function send()
 		Request({
@@ -24,23 +22,22 @@ function Webhook.CreateMessage(Url, Username, Content)
 	local webhook = {}
 
 	function webhook:AddEmbed(title, description)
-		local embed = {
+		local embedData = {
 			title = title or "",
 			color = math.random(0, 16777215),
 			description = description or "",
 			fields = {},
 			thumbnail = {url = "https://cdn.discordapp.com/attachments/1366160415444439160/1450846645045694474/solix_logo-min_1.png"},
-			footer = {text = "https://solixhub.com/"},
+			footer = {text = "discord.gg/solixhub"},
 			timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
 		}
 
-		table.insert(data.embeds, embed)
-		table.insert(embeds, embed)
+		table.insert(data.embeds, embedData)
 
 		local embed = {}
 
 		function embed:AddField(name, value)
-			table.insert(embed.fields, {
+			table.insert(embedData.fields, {
 				name = name or "",
 				value = value or ""
 			})
@@ -48,10 +45,9 @@ function Webhook.CreateMessage(Url, Username, Content)
 
 		return embed
 	end
-	function main:Send()
+	function  webhook:SendMessage()
 		send()
 	end
-	return main
+	return webhook
 end
-
 return Webhook
