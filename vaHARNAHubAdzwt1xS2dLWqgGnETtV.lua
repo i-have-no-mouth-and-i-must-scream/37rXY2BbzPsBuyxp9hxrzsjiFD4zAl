@@ -19,60 +19,20 @@ else
 	warn = function() end
 end
 
-local OldLibrary = getgenv().Library
+local Library = getgenv().Library
 
-if OldLibrary and type(OldLibrary) == "table" then
-	if OldLibrary.Holder and OldLibrary.Holder.Instance then
-		pcall(function()
-			OldLibrary.Holder.Instance:Destroy()
-		end)
-	end
-
-	if OldLibrary.OtherHolder and OldLibrary.OtherHolder.Instance then
-		pcall(function()
-			OldLibrary.OtherHolder.Instance:Destroy()
-		end)
-	end
-
-	if OldLibrary.FloatingButtonHolder and OldLibrary.FloatingButtonHolder.Instance then
-		pcall(function()
-			OldLibrary.FloatingButtonHolder.Instance:Destroy()
-		end)
-	end
-
-	if OldLibrary.UnusedHolder and OldLibrary.UnusedHolder.Instance then
-		pcall(function()
-			OldLibrary.UnusedHolder.Instance:Destroy()
-		end)
-	end
-
-	if OldLibrary.NotifHolder then
-		pcall(function()
-			OldLibrary.NotifHolder:Destroy()
-		end)
-	end
-
-	if OldLibrary.Connections and type(OldLibrary.Connections.Destroy) == "function" then
-		for _, connection in OldLibrary.Connections do
-			pcall(function()
-				if connection.Connection then
-					connection.Connection:Disconnect()
-				end
-			end)
-		end
-	end
-
-	if OldLibrary.Threads then
-		for _, thread in OldLibrary.Threads do
-			pcall(function()
-				coroutine.close(thread)
-			end)
+if type(Library) ~= "table" or not next(Library) then
+	Library = {}
+	getgenv().Library = Library
+else
+	if type(Library.Unload) == "function" then
+		local Success = pcall(Library.Unload, Library)
+		if Success then
+			Library = {}
+			getgenv().Library = Library
 		end
 	end
 end
-
-local Library = {}
-getgenv().Library = Library
 
 local Folder_Configs = {
 	Directory = "solixhub",
