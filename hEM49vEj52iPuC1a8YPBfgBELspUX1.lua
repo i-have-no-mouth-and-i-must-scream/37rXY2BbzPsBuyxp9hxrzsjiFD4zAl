@@ -5,6 +5,16 @@ local Request = request or httprequest or http_request
 
 local BaseHeaders = { ["Content-Type"] = "application/json" }
 
+local function ColorToDecimal(Color)
+    if not Color then return nil end
+    if type(Color) == "number" then return Color end
+    if typeof(Color) == "Color3" then
+        local r, g, b = Color.R * 255, Color.G * 255, Color.B * 255
+        return bit32.lshift(math.floor(r), 16) | bit32.lshift(math.floor(g), 8) | math.floor(b)
+    end
+    return nil
+end
+
 function Webhook.CreateMessage(Properties)
     assert(Properties.Url, "Url required")
 
@@ -75,9 +85,16 @@ function Webhook.CreateMessage(Properties)
 
             Body.embeds[Idx] = {
                 title = Title,
-                color = Color and tonumber(Color),
+                color = ColorToDecimal(Color),
                 description = Description,
-                fields = {}
+                fields = {},
+                thumbnail = {
+                    url = "https://cdn.discordapp.com/attachments/1366160415444439160/1450846645045694474/solix_logo-min_1.png?ex=694405bb&is=6942b43b&hm=084bc5cd54d82d66ac7f79fdd90c412df5071e69d1c70b9a896f707ac44c8606"
+                },
+                footer = {
+                    text = "https://solixhub.com"
+                },
+                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }
 
             HasEmbed = true
@@ -94,7 +111,7 @@ function Webhook.CreateMessage(Properties)
                 end,
 
                 SetColor = function(NewColor)
-                    Body.embeds[Idx].color = NewColor and tonumber(NewColor)
+                    Body.embeds[Idx].color = ColorToDecimal(NewColor)
                     return self
                 end,
 
