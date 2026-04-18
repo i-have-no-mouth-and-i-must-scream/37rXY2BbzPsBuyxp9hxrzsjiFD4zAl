@@ -1,6 +1,6 @@
 local Webhook = {}
 
-local HttpService = cloneref(game:GetService("HttpService"))
+local HttpService = (cloneref and cloneref(game:GetService("HttpService"))) or game:GetService("HttpService")
 local Request = request or httprequest or http_request
 
 local BaseHeaders = { ["Content-Type"] = "application/json" }
@@ -10,7 +10,7 @@ local function ColorToDecimal(Color)
     if type(Color) == "number" then return Color end
     if typeof(Color) == "Color3" then
         local r, g, b = Color.R * 255, Color.G * 255, Color.B * 255
-        return bit32.lshift(math.floor(r), 16) | bit32.lshift(math.floor(g), 8) | math.floor(b)
+        return bit32.lshift(math.floor(r), 16) + bit32.lshift(math.floor(g), 8) + math.floor(b)
     end
     return nil
 end
@@ -29,6 +29,10 @@ function Webhook.CreateMessage(Properties)
 
     local function InternalSend()
         local Encoded = HttpService:JSONEncode(Body)
+
+        if not Request then
+            return { Success = false, Error = "No request function" }
+        end
 
         local Response = Request({
             Url = Properties.Url,
@@ -228,12 +232,19 @@ function Webhook.DecodeJson(String)
 end
 
 function Webhook.TestConnection(Url)
+    if not Request then
+        return false, { Success = false, Body = "No request function" }
+    end
     local Response = Request({
         Url = Url,
         Method = "GET",
         Headers = BaseHeaders
     })
     return Response.Success ~= nil, Response
+end
+
+function Webhook.IsAvailable()
+    return Request ~= nil
 end
 
 return Webhook
