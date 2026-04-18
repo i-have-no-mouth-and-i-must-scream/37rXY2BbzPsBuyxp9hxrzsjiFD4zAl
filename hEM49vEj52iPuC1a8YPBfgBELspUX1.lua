@@ -3,17 +3,13 @@ local Webhook = {}
 local HttpService = cloneref(game:GetService("HttpService"))
 local Request = request or httprequest or http_request
 
-local DefaultThumbnail = "https://cdn.discordapp.com/attachments/1366160415444439160/1450846645045694474/solix_logo-min_1.png?ex=694405bb&is=6942b43b&hm=084bc5cd54d82d66ac7f79fdd90c412df5071e69d1c70b9a896f707ac44c8606"
-local DefaultFooter = "discord.gg/solixhub"
 local BaseHeaders = { ["Content-Type"] = "application/json" }
 
 function Webhook.CreateMessage(Properties)
     assert(Properties.Url, "Url required")
 
     local EmbedIndex = 0
-    local Fields = {}
     local HasEmbed = false
-    local EmbedData = {}
 
     local Body = {
         username = Properties.username or "",
@@ -22,27 +18,25 @@ function Webhook.CreateMessage(Properties)
     }
 
     local function InternalSend()
-        local Success, Response = pcall(HttpService.JSONEncode, HttpService, Body)
+        local Encoded = HttpService:JSONEncode(Body)
 
-        if not Success then
-            return { Success = false, Error = Response }
-        end
-
-        Success, Response = pcall(Request, {
+        local Response = Request({
             Url = Properties.Url,
             Method = "POST",
             Headers = BaseHeaders,
-            Body = Response
+            Body = Encoded
         })
 
-        return { Success = Success, Response = Response }
+        if Response.Success then
+            return { Success = true }
+        else
+            return { Success = false, Error = Response.Body }
+        end
     end
 
     local function InternalSendWithRetry(RetryCount, RetryDelay)
         RetryCount = RetryCount or 3
         RetryDelay = RetryDelay or 2
-        
-        local LastError = nil
         
         for i = 1, RetryCount do
             local Result = InternalSend()
@@ -51,14 +45,12 @@ function Webhook.CreateMessage(Properties)
                 return Result
             end
             
-            LastError = Result.Error or Result.Response
-            
             if i < RetryCount then
                 task.wait(RetryDelay)
             end
         end
         
-        return { Success = false, Error = LastError or "Max retries exceeded" }
+        return { Success = false, Error = "Max retries exceeded" }
     end
 
     return {
@@ -78,24 +70,16 @@ function Webhook.CreateMessage(Properties)
         end,
 
         AddEmbed = function(Title, Color, Description)
-            assert(Title, "title required")
-            assert(Color, "color required")
-            assert(Description, "description required")
-
             EmbedIndex = EmbedIndex + 1
             local Idx = EmbedIndex
 
-            EmbedData = {
+            Body.embeds[Idx] = {
                 title = Title,
-                color = tonumber(Color),
+                color = Color and tonumber(Color),
                 description = Description,
-                fields = {},
-                thumbnail = { url = DefaultThumbnail },
-                footer = { text = DefaultFooter },
-                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                fields = {}
             }
 
-            Body.embeds[Idx] = EmbedData
             HasEmbed = true
 
             return {
@@ -110,7 +94,7 @@ function Webhook.CreateMessage(Properties)
                 end,
 
                 SetColor = function(NewColor)
-                    Body.embeds[Idx].color = tonumber(NewColor)
+                    Body.embeds[Idx].color = NewColor and tonumber(NewColor)
                     return self
                 end,
 
@@ -120,19 +104,23 @@ function Webhook.CreateMessage(Properties)
                 end,
 
                 SetImage = function(ImageUrl)
-                    Body.embeds[Idx].image = { url = ImageUrl }
+                    if ImageUrl then
+                        Body.embeds[Idx].image = { url = ImageUrl }
+                    end
                     return self
                 end,
 
                 SetThumbnail = function(ThumbnailUrl)
-                    Body.embeds[Idx].thumbnail = { url = ThumbnailUrl }
+                    if ThumbnailUrl then
+                        Body.embeds[Idx].thumbnail = { url = ThumbnailUrl }
+                    end
                     return self
                 end,
 
                 SetFooter = function(FooterText, FooterIcon)
                     Body.embeds[Idx].footer = {
                         text = FooterText or "",
-                        icon_url = FooterIcon or ""
+                        icon_url = FooterIcon
                     }
                     return self
                 end,
@@ -140,21 +128,25 @@ function Webhook.CreateMessage(Properties)
                 SetAuthor = function(AuthorName, AuthorUrl, AuthorIcon)
                     Body.embeds[Idx].author = {
                         name = AuthorName or "",
-                        url = AuthorUrl or "",
-                        icon_url = AuthorIcon or ""
+                        url = AuthorUrl,
+                        icon_url = AuthorIcon
                     }
                     return self
                 end,
 
+                SetTimestamp = function(Timestamp)
+                    Body.embeds[Idx].timestamp = Timestamp
+                    return self
+                end,
+
                 AddField = function(Name, Value, Inline)
-                    assert(Name, "name required")
-                    assert(Value, "value required")
-                    
-                    table.insert(Body.embeds[Idx].fields, {
-                        name = Name,
-                        value = Value,
-                        inline = Inline or false
-                    })
+                    if Name and Value then
+                        table.insert(Body.embeds[Idx].fields, {
+                            name = tostring(Name),
+                            value = tostring(Value),
+                            inline = (Inline == true)
+                        })
+                    end
                     return self
                 end,
 
@@ -170,14 +162,17 @@ function Webhook.CreateMessage(Properties)
             }
         end,
 
-        RemoveEmbed = function(EmbedIndex)
-            table.remove(Body.embeds, EmbedIndex)
+        RemoveEmbed = function(EmbedIndexToRemove)
+            if EmbedIndexToRemove then
+                table.remove(Body.embeds, EmbedIndexToRemove)
+            end
             return self
         end,
 
         ClearEmbeds = function()
             Body.embeds = {}
             EmbedIndex = 0
+            HasEmbed = false
             return self
         end,
 
@@ -216,15 +211,12 @@ function Webhook.DecodeJson(String)
 end
 
 function Webhook.TestConnection(Url)
-    local Success, Response = pcall(Request, {
+    local Response = Request({
         Url = Url,
         Method = "GET",
         Headers = BaseHeaders
     })
-    return Success and Response ~= nil, Response
+    return Response.Success ~= nil, Response
 end
-
-Webhook.DefaultThumbnail = DefaultThumbnail
-Webhook.DefaultFooter = DefaultFooter
 
 return Webhook
