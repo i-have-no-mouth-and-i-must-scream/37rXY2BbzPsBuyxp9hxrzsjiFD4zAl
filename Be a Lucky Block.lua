@@ -13,7 +13,7 @@ end
 
 getgenv().type1 = getgenv().type1 or {}
 getgenv().type2 = getgenv().type2 or {}
-getgenv().type3 = getgenv().type3 or ()
+getgenv().type3 = getgenv().type3 or {}
 
 local type1 = getgenv().type1
 local type2 = getgenv().type2
