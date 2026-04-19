@@ -57,7 +57,7 @@ local function GetFolders()
 end
 
 local function GetAutoloadPath()
-	return GetFolders().Configs .. "/" .. GameName .. "/autoload.json"
+	return GetFolders().Configs .. "/" .. tostring(game.GameId) .. "/autoload.json"
 end
 
 for _, folder in {"solixhub", "solixhub/Configs", "solixhub/Assets", "solixhub/Themes"} do
