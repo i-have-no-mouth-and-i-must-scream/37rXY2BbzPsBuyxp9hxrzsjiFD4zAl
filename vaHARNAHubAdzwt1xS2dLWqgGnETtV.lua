@@ -56,6 +56,10 @@ local function GetFolders()
 	return Folder_Configs
 end
 
+local function GetAutoloadPath()
+	return GetFolders().Configs .. "/" .. GameName .. "/autoload.json"
+end
+
 for _, folder in {"solixhub", "solixhub/Configs", "solixhub/Assets", "solixhub/Themes"} do
 	if not isfolder(folder) then
 		makefolder(folder)
@@ -1837,14 +1841,13 @@ local Library do
 	Library.SaveAutoloadIfEnabled = function(self)
 		if not self.LoadingConfig and self.AutoSave then
 			pcall(function()
-				local FolderPath = self.Folders or self.Folders_Path
-				writefile((FolderPath and FolderPath.Directory or "solixhub") .. "/autoload.json", self:GetConfig())
+				writefile(GetAutoloadPath(), self:GetConfig())
 			end)
 		end
 	end
 
 	Library.CheckForAutoLoad = function(self)
-		local AutoLoadPath = Library.Folders_Path.Directory .. "/autoload.json"
+		local AutoLoadPath = GetAutoloadPath()
 
 		if not isfile(AutoLoadPath) then
 			return
@@ -4771,7 +4774,7 @@ local Library do
 			Library:Connect(Players.PlayerRemoving, function(Player)
 				if Player == LocalPlayer and Library.AutoSave then
 					pcall(function()
-						writefile(Library.Folders_Path.Directory .. "/autoload.json", Library:GetConfig())
+						writefile(GetAutoloadPath(), Library:GetConfig())
 					end)
 				end
 			end)
@@ -8028,7 +8031,7 @@ local Library do
 			local ScriptConfig_Section = Settings:Section({Name = "Script Config", Side = 2})
 
 			local ConfigFolder = Library:GetFolder()
-			local AutoloadPath = Library.Folders_Path.Directory .. "/autoload.json"
+			local AutoloadPath = GetAutoloadPath()
 
 			local function NotifySuccessConfig(Message)
 				Library:Notification({
