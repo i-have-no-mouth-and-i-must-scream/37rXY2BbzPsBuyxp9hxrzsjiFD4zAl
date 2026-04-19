@@ -8019,7 +8019,7 @@ local Library do
 					Name = "Auto Save Config",
 					Flag = "Auto Save Config",
 					Description = "Automatically save your config",
-					Default = false,
+					Default = true,
 					Callback = function(Value)
 						Library.AutoSave = Value
 					end
