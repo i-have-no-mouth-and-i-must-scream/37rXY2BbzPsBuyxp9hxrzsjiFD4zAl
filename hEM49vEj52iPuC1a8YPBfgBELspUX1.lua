@@ -28,7 +28,7 @@ function Webhook.CreateMessage(Url, Username, Content)
 			description = description or "",
 			fields = {},
 			thumbnail = {url = "https://cdn.discordapp.com/attachments/1366160415444439160/1450846645045694474/solix_logo-min_1.png"},
-			footer = {text = "https://solixhub.com/"},
+			footer = {text = "solixhub.com"},
 			timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
 		}
 
