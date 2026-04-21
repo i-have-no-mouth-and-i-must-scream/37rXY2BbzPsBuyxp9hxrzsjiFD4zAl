@@ -48,7 +48,7 @@ local Folder_Configs = {
 }
 
 local Image_Downloads = {
-	{"pleco.png", "https://raw.githubusercontent.com/bao8jl/Images/main/pleco.png"}
+	{"pleco.png", "https://raw.githubusercontent.com/bao8jl/Images/main/pleco.png"},
 	{"tonight.png", "https://raw.githubusercontent.com/bao8jl/Images/main/tonight.png"}
 }
 
