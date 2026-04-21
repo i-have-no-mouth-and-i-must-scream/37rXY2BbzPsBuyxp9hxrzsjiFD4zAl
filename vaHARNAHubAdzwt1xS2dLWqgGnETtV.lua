@@ -47,6 +47,10 @@ local Folder_Configs = {
 	Themes = "solixhub/Themes"
 }
 
+local Image_Downloads = {
+	{"pleco.png", "https://raw.githubusercontent.com/bao8jl/Images/main/pleco.png"}
+}
+
 local function GetFolders()
 	local Library = getgenv().Library
 
@@ -61,9 +65,36 @@ local function GetAutoloadPath()
 	return GetFolders().Configs .. "/" .. tostring(game.GameId) .. "/autoload.json"
 end
 
-for _, folder in {"solixhub", "solixhub/Assets", "solixhub/Configs", "solixhub/Images", "solixhub/Themes"} do
-	if not isfolder(folder) then
-		makefolder(folder)
+for _, Folder in {"solixhub", "solixhub/Assets", "solixhub/Configs", "solixhub/Images", "solixhub/Themes"} do
+	if not isfolder(Folder) then
+		makefolder(Folder)
+	end
+end
+
+for _, ImageData in ipairs(Image_Downloads) do
+	local ImagePath = Folder_Configs.Images .. "/" .. ImageData[1]
+	
+	if not isfile(ImagePath) then
+		local Success = pcall(function()
+			local Response = request({
+				Url = ImageData[2],
+				Method = "GET"
+			})
+
+			if Response and Response.Body then
+				writefile(ImagePath, Response.Body)
+			end
+		end)
+
+		if not Success then
+			pcall(function()
+				local Data = game:HttpGet(ImageData[2])
+
+				if Data then
+					writefile(ImagePath, Data)
+				end
+			end)
+		end
 	end
 end
 
