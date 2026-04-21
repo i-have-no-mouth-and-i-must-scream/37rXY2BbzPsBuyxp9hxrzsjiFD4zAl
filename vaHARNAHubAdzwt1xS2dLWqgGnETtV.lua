@@ -73,7 +73,7 @@ end
 
 for _, ImageData in ipairs(Image_Downloads) do
 	local ImagePath = Folder_Configs.Images .. "/" .. ImageData[1]
-	
+
 	if not isfile(ImagePath) then
 		local Success = pcall(function()
 			local Response = request({
