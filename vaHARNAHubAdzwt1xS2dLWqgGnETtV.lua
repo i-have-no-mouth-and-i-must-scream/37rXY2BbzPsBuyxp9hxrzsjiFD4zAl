@@ -78,6 +78,7 @@ local Library do
 	local cloneref = cloneref or function(o) return o end
 
 	local CoreGui = cloneref(game:GetService("CoreGui"))
+	local Debris = cloneref(game:GetService("Debris"))
 	local TweenService = cloneref(game:GetService("TweenService"))
 	local UserInputService = cloneref(game:GetService("UserInputService"))
 	local Players = cloneref(game:GetService("Players"))
@@ -745,7 +746,7 @@ local Library do
 				return
 			end
 
-			self.Instance:Destroy()
+			Debris:AddItem(self.Instance, 0)
 			self = nil
 		end
 
@@ -1375,12 +1376,12 @@ local Library do
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				FontFace = Library.Font,
-				Position = UDim2New(0.5, 0, 0.5, 0),
+				Position = UDim2New(0.5, 0, 0.55, 0),
 				RichText = false,
 				Size = UDim2New(1, -20, 0, 40),
-				Text = "Son, your key is expiring soon 😭🙏",
-				TextColor3 = FromRGB(0, 0, 0),
-				TextSize = 14,
+				Text = "Your key is expiring soon 😭🙏",
+				TextColor3 = Library.Theme["Text"],
+				TextSize = 20,
 				TextWrapped = true,
 				ZIndex = 10000
 			})
@@ -1388,7 +1389,7 @@ local Library do
 
 		local function HideKeyWarning()
 			if WarningFrame and WarningFrame.Instance then
-				WarningFrame.Instance:Destroy()
+				Debris:AddItem(WarningFrame.Instance, 0)
 				WarningFrame = nil
 			end
 		end
@@ -1483,7 +1484,7 @@ local Library do
 		end
 
 		if self.FloatingButtonHolder then
-			self.FloatingButtonHolder.Instance:Destroy()
+			Debris:AddItem(self.FloatingButtonHolder.Instance, 0)
 		end
 
 		Library = nil 
@@ -2164,7 +2165,7 @@ local Library do
 		function Toggle:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Item.Instance:Destroy()
+					Debris:AddItem(Item.Instance, 0)
 				end
 			end
 			return Toggle
@@ -3361,7 +3362,7 @@ local Library do
 		function Colorpicker:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Item.Instance:Destroy()
+					Debris:AddItem(Item.Instance, 0)
 				end
 			end
 
@@ -3936,7 +3937,7 @@ local Library do
 		function Keybind:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Item.Instance:Destroy()
+					Debris:AddItem(Item.Instance, 0)
 				end
 			end
 
@@ -5578,7 +5579,7 @@ local Library do
 		function Toggle:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Item.Instance:Destroy()
+					Debris:AddItem(Item.Instance, 0)
 				end
 			end
 
@@ -5862,7 +5863,7 @@ local Library do
 		function Checkbox:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Item.Instance:Destroy()
+					Debris:AddItem(Item.Instance, 0)
 				end
 			end
 
@@ -6016,7 +6017,7 @@ local Library do
 		function Button:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Item.Instance:Destroy()
+					Debris:AddItem(Item.Instance, 0)
 				end
 			end
 			return Button
@@ -6467,7 +6468,7 @@ local Library do
 
 			for _, Item in Items do
 				if Item.Instance then
-					Item.Instance:Destroy()
+					Debris:AddItem(Item.Instance, 0)
 				end
 			end
 
@@ -7187,7 +7188,7 @@ local Library do
 		function Dropdown:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Item.Instance:Destroy()
+					Debris:AddItem(Item.Instance, 0)
 				end
 			end
 
@@ -7409,7 +7410,7 @@ local Library do
 		function Label:Destroy()
 			for _, Item in Items do
 				if Item and Item.Instance then
-					Item.Instance:Destroy()
+					Debris:AddItem(Item.Instance, 0)
 				end
 			end
 
@@ -7684,7 +7685,7 @@ local Library do
 		function Textbox:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Item.Instance:Destroy()
+					Debris:AddItem(Item.Instance, 0)
 				end
 			end
 
