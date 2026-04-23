@@ -41,6 +41,7 @@ end
 
 local Folder_Configs = {
 	Directory = "solixhub",
+	Datas = "solixhub/Datas",
 	Assets = "solixhub/Assets",
 	Configs = "solixhub/Configs",
 	Images = "solixhub/Images",
@@ -61,15 +62,7 @@ local function GetAutoloadPath()
 	return GetFolders().Configs .. "/" .. tostring(game.GameId) .. "/autoload.json"
 end
 
-for _, Image in {"pleco.png", "tonight.png"} do
-	local ImagePath = Folder_Configs.Images .. "/" .. Image
-
-	if isfile(ImagePath) then
-		delfile(ImagePath)
-	end
-end
-
-for _, Folder in {"solixhub", "solixhub/Assets", "solixhub/Configs", "solixhub/Images", "solixhub/Themes"} do
+for _, Folder in {"solixhub", "solixhub/Datas", "solixhub/Assets", "solixhub/Configs", "solixhub/Images", "solixhub/Themes"} do
 	if not isfolder(Folder) then
 		makefolder(Folder)
 	end
