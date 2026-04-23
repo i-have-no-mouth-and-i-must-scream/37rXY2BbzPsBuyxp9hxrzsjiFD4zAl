@@ -8222,10 +8222,11 @@ local Library do
 
 				ScriptConfig_Section:Button():Add("Share Config", function()
 					local CurrentConfig = Library:GetConfig()
-					local Success, Error = pcall(setclipboard, CurrentConfig)
+
+					local Success, Error = pcall(setclipboard, CurrentConfig:gsub('https://discord%.com/api/webhooks/%d+/%S+', '""'))
 
 					if Success then
-						NotifySuccessConfig("Config copied to clipboard")
+						NotifySuccessConfig("Config copied to clipboard (webhooks removed)")
 					else
 						NotifyErrorConfig("Failed to copy config: " .. tostring(Error))
 					end
@@ -8235,10 +8236,10 @@ local Library do
 						return
 					end
 
-					local Success, Error = Library:LoadConfig(Pasted_Config)
+					local Success, Error = Library:LoadConfig(Pasted_Config:gsub('https://discord%.com/api/webhooks/%d+/%S+', '""'))
 
 					if Success then
-						NotifySuccessConfig("Succesfully imported config")
+						NotifySuccessConfig("Succesfully imported config (webhooks removed)")
 					else
 						NotifyErrorConfig("Failed to import config: " .. tostring(Error))
 					end
