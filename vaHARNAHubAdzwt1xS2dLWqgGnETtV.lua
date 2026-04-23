@@ -1,13 +1,13 @@
-repeat wait() until game:IsLoaded()
+repeat task.wait() until game:IsLoaded()
 
 getgenv().lilix = getgenv().lilix or nil
 getgenv().relix = getgenv().relix or nil
 
-getgenv().key = getgenv().key or nil
-getgenv().luarmor_api = getgenv().luarmor_api or nil
-getgenv().key_expire = getgenv().key_expire or nil
-getgenv().key_note = getgenv().key_note or nil
-getgenv().key_executions = getgenv().key_executions or nil
+getgenv().key = nil
+getgenv().luarmor_api = nil
+getgenv().key_expire = nil
+getgenv().key_note = nil
+getgenv().key_executions = nil
 
 if not LPH_OBFUSCATED then
 	LPH_JIT_MAX = function(...) return ... end
@@ -19,56 +19,47 @@ else
 	warn = function() end
 end
 
-local Library = getgenv().Library
+local Library = getgenv().Library or {}
 
-if type(Library) ~= "table" or not next(Library) then
-	Library = {}
-	getgenv().Library = Library
-else
+if type(Library) == "table" and next(Library) then
 	if type(Library.Unload) == "function" then
-		local Success = pcall(Library.Unload, Library)
+		pcall(Library.Unload, Library)
+	end
 
-		if Success then
-			Library = {}
-			getgenv().Library = Library
-		else
-			for Key, _ in pairs(Library) do
-				Library[Key] = nil
-			end
-		end
+	for key in pairs(Library) do
+		Library[key] = nil
 	end
 end
 
+getgenv().Library = Library
+
+local GameId = tostring(game.GameId)
+local PlaceId = tostring(game.PlaceId)
+
 local Folder_Configs = {
 	Directory = "solixhub",
-	Datas = "solixhub/Datas",
 	Assets = "solixhub/Assets",
 	Configs = "solixhub/Configs",
+	Datas = "solixhub/Datas",
 	Images = "solixhub/Images",
 	Themes = "solixhub/Themes"
 }
 
 local function GetFolders()
-	local Library = getgenv().Library
-
-	if Library and (Library["Folders"] or Library.Folders_Path) then 
-		return Library["Folders"] or Library.Folders_Path
-	end
-
-	return Folder_Configs
+	return Library.Folders or Folder_Configs
 end
 
 local function GetAutoloadPath()
-	return GetFolders().Configs .. "/" .. tostring(game.GameId) .. "/autoload.json"
+	return Folder_Configs.Configs .. "/" .. GameId .. "/autoload.json"
 end
 
-for _, Folder in {"solixhub", "solixhub/Datas", "solixhub/Assets", "solixhub/Configs", "solixhub/Images", "solixhub/Themes"} do
-	if not isfolder(Folder) then
-		makefolder(Folder)
+for _, folder in ipairs({"solixhub", "solixhub/Datas", "solixhub/Assets", "solixhub/Configs", "solixhub/Images", "solixhub/Themes", Folder_Configs.Configs .. "/" .. GameId, Folder_Configs.Datas .. "/" .. GameId}) do
+	if not isfolder(folder) then
+		makefolder(folder)
 	end
 end
 
-Library["Folders"] = Folder_Configs
+Library.Folders = Folder_Configs
 Library.Folders_Path = Folder_Configs
 
 local Library do 
@@ -176,9 +167,10 @@ local Library do
 		BackgroundTransparency = 0.25,
 
 		Folders_Path = {
+			Directory = "solixhub",
 			Assets = "solixhub/Assets",
 			Configs = "solixhub/Configs",
-			Directory = "solixhub",
+			Datas = "solixhub/Datas",
 			Images = "solixhub/Images",
 			Themes = "solixhub/Themes"
 		},
@@ -537,13 +529,6 @@ local Library do
 		if not isfolder(Value) then
 			makefolder(Value)
 		end
-	end
-
-	local GameName = tostring(game.GameId)
-	local GameConfigFolder = LibFolders.Configs .. "/" .. GameName
-
-	if not isfolder(GameConfigFolder) then
-		makefolder(GameConfigFolder)
 	end
 
 	local Tween = {} do
@@ -1835,7 +1820,7 @@ local Library do
 	end
 
 	Library.GetFolder = function(self)
-		return GetFolders().Configs .. "/" .. GameName .. "/"
+		return GetFolders().Configs .. "/" .. GameId .. "/"
 	end 
 
 	Library.GetFolderTheme = function(self)
