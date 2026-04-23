@@ -41,9 +41,9 @@ end
 
 local Folder_Configs = {
 	Directory = "solixhub",
-	Datas = "solixhub/Datas",
 	Assets = "solixhub/Assets",
 	Configs = "solixhub/Configs",
+	Datas = "solixhub/Datas",
 	Images = "solixhub/Images",
 	Themes = "solixhub/Themes"
 }
@@ -62,9 +62,15 @@ local function GetAutoloadPath()
 	return GetFolders().Configs .. "/" .. tostring(game.GameId) .. "/autoload.json"
 end
 
-for _, Folder in {"solixhub", "solixhub/Datas", "solixhub/Assets", "solixhub/Configs", "solixhub/Images", "solixhub/Themes"} do
-	if not isfolder(Folder) then
-		makefolder(Folder)
+for _, Folder1 in {"solixhub", "solixhub/Datas", "solixhub/Assets", "solixhub/Configs", "solixhub/Images", "solixhub/Themes"} do
+	if not isfolder(Folder1) then
+		makefolder(Folder1)
+	end
+end
+
+for _, Folder2 in {Folder_Configs.Configs .. "/" .. tostring(game.GameId), Folder_Configs.Datas .. "/" .. tostring(game.GameId)} do
+	if not isfolder(Folder2) then
+		makefolder(Folder2)
 	end
 end
 
@@ -176,9 +182,10 @@ local Library do
 		BackgroundTransparency = 0.25,
 
 		Folders_Path = {
+			Directory = "solixhub",
 			Assets = "solixhub/Assets",
 			Configs = "solixhub/Configs",
-			Directory = "solixhub",
+			Datas = "solixhub/Datas",
 			Images = "solixhub/Images",
 			Themes = "solixhub/Themes"
 		},
@@ -537,13 +544,6 @@ local Library do
 		if not isfolder(Value) then
 			makefolder(Value)
 		end
-	end
-
-	local GameName = tostring(game.GameId)
-	local GameConfigFolder = LibFolders.Configs .. "/" .. GameName
-
-	if not isfolder(GameConfigFolder) then
-		makefolder(GameConfigFolder)
 	end
 
 	local Tween = {} do
