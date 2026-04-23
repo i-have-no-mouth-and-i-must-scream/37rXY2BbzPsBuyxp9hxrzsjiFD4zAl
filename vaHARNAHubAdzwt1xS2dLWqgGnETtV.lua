@@ -4844,6 +4844,12 @@ local Library do
 			Items["MainFrame"].Instance.Size = UDim2New(0, 285, 0, 35)
 			Items["Pages"].Instance.Visible = false
 			Items["Content"].Instance.Visible = false
+		elseif Library.AutoMinimize then
+			Window.IsMinimized = true
+
+			Items["MainFrame"].Instance.Size = UDim2New(0, 285, 0, 35)
+			Items["Pages"].Instance.Visible = false
+			Items["Content"].Instance.Visible = false
 		end
 
 		Window:SetOpen(true)
@@ -8011,6 +8017,34 @@ local Library do
 					Default = false,
 					Callback = function(Value)
 						Library.AutoSave = Value
+					end
+				})
+
+				MenuSetting_Section:Toggle({
+					Name = "Auto Minimize",
+					Flag = "Auto Minimize",
+					Description = "Automatically minimize on startup",
+					Default = false,
+					Callback = function(Value)
+						Library.AutoMinimize = Value
+
+						if Value then
+							Window:Minimize(true)
+						end
+					end
+				})
+
+				MenuSetting_Section:Toggle({
+					Name = "Auto Execute",
+					Flag = "Auto Execute",
+					Description = "Auto execute script after teleport",
+					Default = false,
+					Callback = function(Value)
+						Library.AutoExecute = Value
+
+						if Value then
+							queueonteleport(loadstring(game:HttpGet("https://raw.githubusercontent.com/bao8jl/solixhub/main/loader"))())
+						end
 					end
 				})
 			end
