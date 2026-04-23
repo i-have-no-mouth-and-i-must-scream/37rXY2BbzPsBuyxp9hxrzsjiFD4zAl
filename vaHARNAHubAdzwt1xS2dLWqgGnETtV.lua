@@ -8028,7 +8028,7 @@ local Library do
 					Callback = function(Value)
 						Library.AutoMinimize = Value
 
-						if Value then
+						if Value and Window.Minimize then
 							Window:Minimize(true)
 						end
 					end
@@ -8042,8 +8042,8 @@ local Library do
 					Callback = function(Value)
 						Library.AutoExecute = Value
 
-						if Value then
-							queueonteleport(loadstring(game:HttpGet("https://raw.githubusercontent.com/bao8jl/solixhub/main/loader"))())
+						if Value and queueonteleport then
+							queueonteleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/bao8jl/solixhub/main/loader"))()')
 						end
 					end
 				})
