@@ -2101,7 +2101,7 @@ local Library do
 
 				Name = Data.Name or Data.name or Toggle.Name,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
-				Default = Data.Default or Data.default or Enum.KeyCode.E,
+				Default = Data.Default or Data.default,
 				Callback = Data.Callback or Data.callback or function() end,
 				Mode = Data.Mode or Data.mode or "Toggle"
 			}
@@ -3913,8 +3913,6 @@ local Library do
 				Mode = Data.Mode or "Toggle",
 				Key = Data.Default,
 			})
-		else
-			Items["KeyButton"].Instance.Text = "press a key"
 		end
 
 		Library.SetFlags[Keybind.Flag] = function(Value)
@@ -5528,7 +5526,7 @@ local Library do
 
 				Name = Data.Name or Data.name or Toggle.Name,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
-				Default = Data.Default or Data.default or Enum.KeyCode.E,
+				Default = Data.Default or Data.default,
 				Callback = Data.Callback or Data.callback or function() end,
 				Mode = Data.Mode or Data.mode or "Toggle"
 			}
@@ -5814,7 +5812,7 @@ local Library do
 
 				Name = Data.Name or Data.name or Checkbox.Name,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
-				Default = Data.Default or Data.default or Enum.KeyCode.E,
+				Default = Data.Default or Data.default,
 				Callback = Data.Callback or Data.callback or function() end,
 				Mode = Data.Mode or Data.mode or "Toggle"
 			}
@@ -7369,7 +7367,7 @@ local Library do
 				Page = Label.Page,
 				Section = Label.Section,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
-				Default = Data.Default or Data.default or Enum.KeyCode.E,
+				Default = Data.Default or Data.default,
 				Mode = Data.Mode or Data.mode or "Toggle",
 				Callback = Data.Callback or Data.callback or function() end
 			})
