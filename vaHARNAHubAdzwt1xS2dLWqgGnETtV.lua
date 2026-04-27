@@ -3913,6 +3913,8 @@ local Library do
 				Mode = Data.Mode or "Toggle",
 				Key = Data.Default,
 			})
+		else
+			Items["KeyButton"].Instance.Text = "press a key"
 		end
 
 		Library.SetFlags[Keybind.Flag] = function(Value)
