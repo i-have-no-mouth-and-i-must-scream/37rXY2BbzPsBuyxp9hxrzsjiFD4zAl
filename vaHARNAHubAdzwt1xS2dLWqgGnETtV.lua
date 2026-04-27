@@ -2101,7 +2101,7 @@ local Library do
 
 				Name = Data.Name or Data.name or Toggle.Name,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
-				Default = Data.Default or Data.default,
+				Default = Data.Default or Data.default or Enum.KeyCode.E,
 				Callback = Data.Callback or Data.callback or function() end,
 				Mode = Data.Mode or Data.mode or "Toggle"
 			}
@@ -5526,7 +5526,7 @@ local Library do
 
 				Name = Data.Name or Data.name or Toggle.Name,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
-				Default = Data.Default or Data.default,
+				Default = Data.Default or Data.default or Enum.KeyCode.E,
 				Callback = Data.Callback or Data.callback or function() end,
 				Mode = Data.Mode or Data.mode or "Toggle"
 			}
@@ -5812,7 +5812,7 @@ local Library do
 
 				Name = Data.Name or Data.name or Checkbox.Name,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
-				Default = Data.Default or Data.default,
+				Default = Data.Default or Data.default or Enum.KeyCode.E,
 				Callback = Data.Callback or Data.callback or function() end,
 				Mode = Data.Mode or Data.mode or "Toggle"
 			}
@@ -7367,7 +7367,7 @@ local Library do
 				Page = Label.Page,
 				Section = Label.Section,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
-				Default = Data.Default or Data.default,
+				Default = Data.Default or Data.default or Enum.KeyCode.E,
 				Mode = Data.Mode or Data.mode or "Toggle",
 				Callback = Data.Callback or Data.callback or function() end
 			})
