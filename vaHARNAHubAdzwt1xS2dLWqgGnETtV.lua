@@ -8042,7 +8042,9 @@ local Library do
 					Callback = function(Value)
 						Library.AutoExecute = Value
 
-						if Value and queueonteleport then
+						if Value and not getgenv().auto_execute then
+							getgenv().auto_execute = true
+							wait(0.3)
 							queueonteleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/bao8jl/solixhub/main/loader"))()')
 						end
 					end
