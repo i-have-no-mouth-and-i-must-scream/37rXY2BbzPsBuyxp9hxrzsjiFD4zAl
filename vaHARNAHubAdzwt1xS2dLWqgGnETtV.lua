@@ -69,9 +69,7 @@ local Library do
 	local defer = task.defer
 
 	local cloneref = cloneref or function(o) return o end
-
 	local CoreGui = cloneref(game:GetService("CoreGui"))
-	local Debris = cloneref(game:GetService("Debris"))
 	local TweenService = cloneref(game:GetService("TweenService"))
 	local UserInputService = cloneref(game:GetService("UserInputService"))
 	local Players = cloneref(game:GetService("Players"))
@@ -734,7 +732,7 @@ local Library do
 				return
 			end
 
-			Debris:AddItem(self.Instance, 0)
+			self.Instance:Destroy()
 			self = nil
 		end
 
@@ -1377,7 +1375,7 @@ local Library do
 
 		local function HideKeyWarning()
 			if WarningFrame and WarningFrame.Instance then
-				Debris:AddItem(WarningFrame.Instance, 0)
+				WarningFrame.Instance:Destroy()
 				WarningFrame = nil
 			end
 		end
@@ -1472,7 +1470,7 @@ local Library do
 		end
 
 		if self.FloatingButtonHolder then
-			Debris:AddItem(self.FloatingButtonHolder.Instance, 0)
+			self.FloatingButtonHolder.Instance:Destroy()
 		end
 
 		Library = nil 
@@ -2153,7 +2151,8 @@ local Library do
 		function Toggle:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Debris:AddItem(Item.Instance, 0)
+					Item.Instance:Destroy()
+					Item.Instance = nil
 				end
 			end
 			return Toggle
@@ -3350,7 +3349,8 @@ local Library do
 		function Colorpicker:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Debris:AddItem(Item.Instance, 0)
+					Item.Instance:Destroy()
+					Item.Instance = nil
 				end
 			end
 
@@ -3925,7 +3925,8 @@ local Library do
 		function Keybind:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Debris:AddItem(Item.Instance, 0)
+					Item.Instance:Destroy()
+					Item.Instance = nil
 				end
 			end
 
@@ -5573,7 +5574,8 @@ local Library do
 		function Toggle:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Debris:AddItem(Item.Instance, 0)
+					Item.Instance:Destroy()
+					Item.Instance = nil
 				end
 			end
 
@@ -5857,7 +5859,8 @@ local Library do
 		function Checkbox:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Debris:AddItem(Item.Instance, 0)
+					Item.Instance:Destroy()
+					Item.Instance = nil
 				end
 			end
 
@@ -6011,7 +6014,8 @@ local Library do
 		function Button:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Debris:AddItem(Item.Instance, 0)
+					Item.Instance:Destroy()
+					Item.Instance = nil
 				end
 			end
 			return Button
@@ -6462,7 +6466,8 @@ local Library do
 
 			for _, Item in Items do
 				if Item.Instance then
-					Debris:AddItem(Item.Instance, 0)
+					Item.Instance:Destroy()
+					Item.Instance = nil
 				end
 			end
 
@@ -7182,7 +7187,8 @@ local Library do
 		function Dropdown:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Debris:AddItem(Item.Instance, 0)
+					Item.Instance:Destroy()
+					Item.Instance = nil
 				end
 			end
 
@@ -7404,7 +7410,8 @@ local Library do
 		function Label:Destroy()
 			for _, Item in Items do
 				if Item and Item.Instance then
-					Debris:AddItem(Item.Instance, 0)
+					Item.Instance:Destroy()
+					Item.Instance = nil
 				end
 			end
 
@@ -7679,7 +7686,8 @@ local Library do
 		function Textbox:Destroy()
 			for _, Item in Items do
 				if Item.Instance then
-					Debris:AddItem(Item.Instance, 0)
+					Item.Instance:Destroy()
+					Item.Instance = nil
 				end
 			end
 
