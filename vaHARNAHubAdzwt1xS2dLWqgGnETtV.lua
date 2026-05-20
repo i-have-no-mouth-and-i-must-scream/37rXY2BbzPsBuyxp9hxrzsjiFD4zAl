@@ -21,7 +21,7 @@ end
 
 local Library = getgenv().Library or {}
 
- local LocalPlayer = cloneref(Players.LocalPlayer)
+ local LocalPlayer = cloneref(game.Players.LocalPlayer)
     local Mouse = cloneref(LocalPlayer:GetMouse())
 
     if (identifyexecutor() == "Wave") then
