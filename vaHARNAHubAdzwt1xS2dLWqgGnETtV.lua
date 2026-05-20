@@ -21,6 +21,15 @@ end
 
 local Library = getgenv().Library or {}
 
+ local LocalPlayer = cloneref(Players.LocalPlayer)
+    local Mouse = cloneref(LocalPlayer:GetMouse())
+
+    if (identifyexecutor() == "Wave") then
+        getgenv().gethui = function()
+            return game:GetService("CoreGui")
+        end
+end
+
 if type(Library) == "table" and next(Library) then
 	if type(Library.Unload) == "function" then
 		pcall(Library.Unload, Library)
