@@ -21,15 +21,6 @@ end
 
 local Library = getgenv().Library or {}
 
- local LocalPlayer = cloneref(game.Players.LocalPlayer)
-    local Mouse = cloneref(LocalPlayer:GetMouse())
-
-    if (identifyexecutor() == "Wave") then
-        getgenv().gethui = function()
-            return game:GetService("CoreGui")
-        end
-end
-
 if type(Library) == "table" and next(Library) then
 	if type(Library.Unload) == "function" then
 		pcall(Library.Unload, Library)
@@ -1632,7 +1623,7 @@ local Library do
 			if Library.FloatingButton and Library.FloatingButton.Instance then
 				local Pos = Library.FloatingButton.Instance.Position
 
-				Config["FloatingButtonPosition"] = {
+				Config["Floating Button Position"] = {
 					X = {Scale = Pos.X.Scale, Offset = Pos.X.Offset},
 					Y = {Scale = Pos.Y.Scale, Offset = Pos.Y.Offset}
 				}
@@ -1649,7 +1640,7 @@ local Library do
 
 		local Success, Result = Library:SafeCall(function()
 			for Index, Value in Decoded do 
-				if Index == "FloatingButtonPosition" then
+				if Index == "Floating Button Position" then
 					if Library.FloatingButton and Library.FloatingButton.Instance then
 						Library.FloatingButton.Instance.Position = UDim2New(Value.X.Scale, Value.X.Offset, Value.Y.Scale, Value.Y.Offset)
 					end
@@ -4196,6 +4187,7 @@ local Library do
 
 		local TitleText = Data.Title or Data.Name or ""
 		local DescText = Data.Description or ""
+		local Color = Data.Color or Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
 		local Duration = Data.Duration or 5
 
 		local PaddingH = 6
@@ -4327,7 +4319,7 @@ local Library do
 				Parent = Items["Duration"].Instance,
 				Name = "\0",
 				Size = UDim2New(1, 0, 1, 0),
-				BackgroundColor3 = Data.Color,
+				BackgroundColor3 = Color,
 				BorderColor3 = FromRGB(0, 0, 0),
 				BorderSizePixel = 0
 			})
@@ -8245,7 +8237,7 @@ local Library do
 					local Success, Error = pcall(setclipboard, CurrentConfig:gsub('https://discord%.com/api/webhooks/%d+/%S+', ''))
 
 					if Success then
-						NotifySuccessConfig("Config copied to clipboard (webhooks removed)")
+						NotifySuccessConfig("Config copied to clipboard")
 					else
 						NotifyErrorConfig("Failed to copy config: " .. tostring(Error))
 					end
@@ -8258,7 +8250,7 @@ local Library do
 					local Success, Error = Library:LoadConfig(Pasted_Config:gsub('https://discord%.com/api/webhooks/%d+/%S+', ''))
 
 					if Success then
-						NotifySuccessConfig("Succesfully imported config (webhooks removed)")
+						NotifySuccessConfig("Succesfully imported config")
 					else
 						NotifyErrorConfig("Failed to import config: " .. tostring(Error))
 					end
