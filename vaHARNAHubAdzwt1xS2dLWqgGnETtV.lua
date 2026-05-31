@@ -1850,17 +1850,17 @@ local Library do
 
 		if Success then
 			Library:Notification({
-				Name = "Success",
+				Title = "Success",
 				Description = "Succesfully autoloaded config",
-				Color = Color3.fromRGB(0, 255, 0),
-				Duration = 5
+				Duration = 5,
+				Color = Color3.fromRGB(0, 255, 0)
 			})
 		else
 			Library:Notification({
-				Name = "Error",
+				Title = "Error",
 				Description = "Failed to load config: " .. (Error or "Unknown error"),
-				Color = Color3.fromRGB(255, 0, 0),
-				Duration = 5
+				Duration = 5,
+				Color = Color3.fromRGB(255, 0, 0)
 			})
 		end
 	end
@@ -2100,8 +2100,8 @@ local Library do
 				Name = Data.Name or Data.name or Toggle.Name,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
 				Default = Data.Default or Data.default or Enum.KeyCode.E,
-				Callback = Data.Callback or Data.callback or function() end,
-				Mode = Data.Mode or Data.mode or "Toggle"
+				Mode = Data.Mode or Data.mode or "Toggle",
+				Callback = Data.Callback or Data.callback or function() end
 			}
 
 			local NewKeybind = Library:CreateKeybind({
@@ -5529,8 +5529,8 @@ local Library do
 				Name = Data.Name or Data.name or Toggle.Name,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
 				Default = Data.Default or Data.default or Enum.KeyCode.E,
-				Callback = Data.Callback or Data.callback or function() end,
-				Mode = Data.Mode or Data.mode or "Toggle"
+				Mode = Data.Mode or Data.mode or "Toggle",
+				Callback = Data.Callback or Data.callback or function() end
 			}
 
 			local NewKeybind, KeybindItems = Library:CreateKeybind({
@@ -5816,8 +5816,8 @@ local Library do
 				Name = Data.Name or Data.name or Checkbox.Name,
 				Flag = Data.Flag or Data.flag or Library:NextFlag(),
 				Default = Data.Default or Data.default or Enum.KeyCode.E,
-				Callback = Data.Callback or Data.callback or function() end,
-				Mode = Data.Mode or Data.mode or "Toggle"
+				Mode = Data.Mode or Data.mode or "Toggle",
+				Callback = Data.Callback or Data.callback or function() end
 			}
 
 			local NewKeybind, KeybindItems = Library:CreateKeybind({
@@ -7717,19 +7717,19 @@ local Library do
 
 			local function NotifySuccessTheme(Message)
 				Library:Notification({
-					Name = "Success",
+					Title = "Success",
 					Description = Message,
-					Color = Color3.fromRGB(0, 255, 0),
-					Duration = 5
+					Duration = 5,
+					Color = Color3.fromRGB(0, 255, 0)
 				})
 			end
 
 			local function NotifyErrorTheme(Message)
 				Library:Notification({
-					Name = "Error",
+					Title = "Error",
 					Description = Message,
-					Color = Color3.fromRGB(255, 0, 0),
-					Duration = 5
+					Duration = 5,
+					Color = Color3.fromRGB(255, 0, 0)
 				})
 			end
 
@@ -8069,19 +8069,19 @@ local Library do
 
 			local function NotifySuccessConfig(Message)
 				Library:Notification({
-					Name = "Success",
+					Title = "Success",
 					Description = Message,
-					Color = Color3.fromRGB(0, 255, 0),
-					Duration = 5
+					Duration = 5,
+					Color = Color3.fromRGB(0, 255, 0)
 				})
 			end
 
 			local function NotifyErrorConfig(Message)
 				Library:Notification({
-					Name = "Error",
+					Title = "Error",
 					Description = Message,
-					Color = Color3.fromRGB(255, 0, 0),
-					Duration = 5
+					Duration = 5,
+					Color = Color3.fromRGB(255, 0, 0)
 				})
 			end
 
