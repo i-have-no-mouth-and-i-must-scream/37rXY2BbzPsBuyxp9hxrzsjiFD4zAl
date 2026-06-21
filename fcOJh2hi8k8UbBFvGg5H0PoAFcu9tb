@@ -137,4 +137,4 @@ if type(ip12q2) == "table" and type(ip12q2.Unload) == "function" then
 end
 
 getgenv().Library = v96s52()
-return getgenv().Library
+return v96s52()
