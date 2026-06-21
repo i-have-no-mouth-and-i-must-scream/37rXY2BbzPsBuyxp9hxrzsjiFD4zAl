@@ -1,87 +1,116 @@
-if not game:IsLoaded() then game.Loaded:Wait() end
-
-if LPH_OBFUSCATED == nil then
-	LPH_ENCSTR = function(s) return s end
+if not game:IsLoaded() then 
+	game.Loaded:Wait()
 end
 
-local HttpService = game:GetService("HttpService")
+if not LPH_OBFUSCATED then
+	LPH_ENCSTR = function(...) return ... end
+	LPH_JIT_MAX = function(...) return ... end
+	LPH_NO_VIRTUALIZE = function(f) return f end
+	LPH_NO_UPVALUES = function(...) return ... end
+	LPH_CRASH = function(...) return ... end
+else
+	print = function() end
+	warn = function() end
+end
 
-local api_token_cache = { token = nil, fetched_at = 0, ttl = 3, uses = 0, max_uses = 5 }
+local xYqKpR = game:GetService("HttpService")
 
-local function api_handshake_token(force_refresh)
-	local now_time = tick()
+local mZvBnT = {mQwXy = nil, bKfRt = 0, qJpLs = 3, vNxWz = 0, dGhTv = 5}
 
-	if force_refresh ~= true and type(api_token_cache.token) == "string" and api_token_cache.token ~= "" then
-		if now_time - api_token_cache.fetched_at < api_token_cache.ttl and api_token_cache.uses < api_token_cache.max_uses then
-			return api_token_cache.token
+local function cWdRkX(fQpLmN)
+	local tGjHvS = tick()
+
+	if fQpLmN ~= true and type(mZvBnT.mQwXy) == "string" and mZvBnT.mQwXy ~= "" then
+		if tGjHvS - mZvBnT.bKfRt < mZvBnT.qJpLs and mZvBnT.vNxWz < mZvBnT.dGhTv then
+			return mZvBnT.mQwXy
 		end
 	end
 
-	local ok, data = pcall(function()
-		return HttpService:JSONDecode(game:HttpGet(LPH_ENCSTR("http://45.43.163.142:25576/handshake")))
+	local kXpRwZ, dNqKsF = pcall(function()
+		return xYqKpR:JSONDecode(game:HttpGet(LPH_ENCSTR("http://45.43.163.142:25576/handshake")))
 	end)
 
-	if ok and type(data) == "table" and type(data.token) == "string" and data.token ~= "" then
-		api_token_cache = { token = data.token, fetched_at = now_time, ttl = 3, uses = 0, max_uses = 5 }
-		return data.token
+	if kXpRwZ and type(dNqKsF) == "table" and type(dNqKsF.mQwXy) == "string" and dNqKsF.mQwXy ~= "" then
+		mZvBnT = {mQwXy = dNqKsF.mQwXy, bKfRt = tGjHvS, qJpLs = 3, vNxWz = 0, dGhTv = 5}
+		return dNqKsF.mQwXy
 	end
 
-	return api_token_cache.token
+	return mZvBnT.mQwXy
 end
 
-local function is_valid_lua_asset_body(body, min_length)
-	min_length = tonumber(min_length) or 100
+local function bTwYxL(wPmQrV, hJnFxK)
+	hJnFxK = tonumber(hJnFxK) or 100
 
-	if type(body) ~= "string" or #body < min_length then return false end
-	if body:find("<!DOCTYPE", 1, true) or body:find("<html", 1, true) then return false end
-	if body:find('"success"', 1, true) and body:find('"error"', 1, true) then return false end
+	if type(wPmQrV) ~= "string" or #wPmQrV < hJnFxK then
+		return false
+	end
+	if wPmQrV:find("<!DOCTYPE", 1, true) or wPmQrV:find("<html", 1, true) then 
+		return false 
+	end
+	if wPmQrV:find('"success"', 1, true) and wPmQrV:find('"error"', 1, true) then
+		return false
+	end
 
 	return true
 end
 
-local function fetch_cdn_library(max_attempts)
-	max_attempts = tonumber(max_attempts) or 6
+local function gLsRdM(cYvNwE)
+	cYvNwE = tonumber(cYvNwE) or 6
 
-	for attempt = 1, max_attempts do
-		local token = api_handshake_token(attempt > 1)
+	for pBzHkT = 1, cYvNwE do
+		local qXrMwL = cWdRkX(pBzHkT > 1)
 
-		if type(token) ~= "string" or token == "" then
-			if attempt < max_attempts then task.wait(0.2) end
+		if type(qXrMwL) ~= "string" or qXrMwL == "" then
+			if pBzHkT < cYvNwE then 
+				task.wait(0.3)
+			end
 			continue
 		end
 
-		local ok, body = pcall(function()
-			return game:HttpGet(LPH_ENCSTR("http://45.43.163.142:25576/library.luau") .. LPH_ENCSTR("?token=") .. token)
+		local uJdNgS, jLpKcX = pcall(function()
+			return game:HttpGet(LPH_ENCSTR("http://45.43.163.142:25576/library.luau") .. LPH_ENCSTR("?token=") .. qXrMwL)
 		end)
 
-		if ok and is_valid_lua_asset_body(body, 2000) then
-			api_token_cache.uses += 1
-			return body
+		if uJdNgS and bTwYxL(jLpKcX, 2000) then
+			mZvBnT.vNxWz = mZvBnT.vNxWz + 1
+			return jLpKcX
 		end
 
-		if attempt < max_attempts then task.wait(0.2) end
+		if pBzHkT < cYvNwE then
+			task.wait(0.3)
+		end
 	end
 	return nil
 end
 
-local function load_bootstrap_library(source_body)
-	if type(source_body) ~= "string" or not is_valid_lua_asset_body(source_body, 2000) then
-		source_body = fetch_cdn_library(6)
+local function vKfPqN(sYrMdT)
+	if type(sYrMdT) ~= "string" or not bTwYxL(sYrMdT, 2000) then
+		sYrMdT = gLsRdM(6)
 	end
 
-	if not is_valid_lua_asset_body(source_body, 2000) then return nil end
-
-	local chunk = loadstring(source_body)
-
-	if type(chunk) ~= "function" and load then
-		local ok_load, loaded_chunk = pcall(load, source_body)
-
-		if ok_load and type(loaded_chunk) == "function" then chunk = loaded_chunk end
+	if not bTwYxL(sYrMdT, 2000) then
+		return nil
 	end
-	if type(chunk) ~= "function" then return nil end
-	local ok_run = pcall(chunk)
 
-	if not ok_run then return nil end
+	local rXnJwK = loadstring(sYrMdT)
+
+	if type(rXnJwK) ~= "function" and load then
+		local oMpVhY, fBdKqL = pcall(load, sYrMdT)
+
+		if oMpVhY and type(fBdKqL) == "function" then 
+			rXnJwK = fBdKqL
+		end
+	end
+
+	if type(rXnJwK) ~= "function" then 
+		return nil
+	end
+
+	local aCwZxJ = pcall(rXnJwK)
+
+	if not aCwZxJ then 
+		return nil
+	end
 
 	if type(getgenv().Library) == "table" and type(getgenv().Library.Window) == "function" then
 		return getgenv().Library
@@ -90,33 +119,35 @@ local function load_bootstrap_library(source_body)
 	return nil
 end
 
-local function load_ui_library()
+local function zQrTmW()
 	if type(readfile) == "function" then
-		for _, path in { "solixrivalsUI.luau", "library.luau" } do
-			local ok_read, body = pcall(readfile, path)
+		for _, yHwPdN in { "solixrivalsUI.luau", "library.luau" } do
+			local eNfLqV, nBxKjR = pcall(readfile, yHwPdN)
 
-			if ok_read and is_valid_lua_asset_body(body, 2000) then
-				local library = load_bootstrap_library(body)
+			if eNfLqV and bTwYxL(nBxKjR, 2000) then
+				local iTpSwM = vKfPqN(nBxKjR)
 
-				if type(library) == "table" then return library end
+				if type(iTpSwM) == "table" then 
+					return iTpSwM
+				end
 			end
 		end
 	end
-	return load_bootstrap_library(nil)
+	return vKfPqN(nil)
 end
 
-local old_library = getgenv().Library
+local sLjYcG = getgenv().Library
 
-if type(old_library) == "table" and type(old_library.Unload) == "function" then
-	pcall(old_library.Unload, old_library)
+if type(sLjYcG) == "table" and type(sLjYcG.Unload) == "function" then
+	pcall(sLjYcG.Unload, sLjYcG)
 end
 
-local Library = load_ui_library()
+local uBxRdZ = zQrTmW()
 
-if type(Library) ~= "table" or type(Library.Window) ~= "function" then
-	return warn("[SolixHub.com] UI library failed to load")
+if type(uBxRdZ) ~= "table" or type(uBxRdZ.Window) ~= "function" then
+	return warn("UI library failed to load")
 end
 
-getgenv().Library = Library
+getgenv().Library = uBxRdZ
 
-return Library
+return uBxRdZ
