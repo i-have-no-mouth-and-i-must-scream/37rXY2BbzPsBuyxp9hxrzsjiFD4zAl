@@ -1,6 +1,6 @@
 repeat task.wait() until game:IsLoaded()
 
-Local Library = {}
+local Library = {}
 
 if not LPH_OBFUSCATED then
 	LPH_ENCSTR = function(...) return ... end
@@ -137,4 +137,4 @@ if type(ip12q2) == "table" and type(ip12q2.Unload) == "function" then
 end
 
 getgenv().Library = v96s52()
-return v96s52()
+return getgenv().Library
