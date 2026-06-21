@@ -2,8 +2,15 @@ if not game:IsLoaded() then
 	game.Loaded:Wait()
 end
 
-if LPH_OBFUSCATED == nil then
-	LPH_ENCSTR = function(s) return s end
+if not LPH_OBFUSCATED then
+	LPH_ENCSTR = function(...) return ... end
+	LPH_JIT_MAX = function(...) return ... end
+	LPH_NO_VIRTUALIZE = function(f) return f end
+	LPH_NO_UPVALUES = function(...) return ... end
+	LPH_CRASH = function(...) return ... end
+else
+	print = function() end
+	warn = function() end
 end
 
 local xYqKpR = game:GetService("HttpService")
@@ -23,9 +30,9 @@ local function cWdRkX(fQpLmN)
 		return xYqKpR:JSONDecode(game:HttpGet(LPH_ENCSTR("http://45.43.163.142:25576/handshake")))
 	end)
 
-	if kXpRwZ and type(dNqKsF) == "table" and type(dNqKsF.mQwXy) == "string" and dNqKsF.mQwXy ~= "" then
-		mZvBnT = {mQwXy = dNqKsF.mQwXy, bKfRt = tGjHvS, qJpLs = 3, vNxWz = 0, dGhTv = 5}
-		return dNqKsF.mQwXy
+	if kXpRwZ and type(dNqKsF) == "table" and type(dNqKsF.token) == "string" and dNqKsF.token ~= "" then
+		mZvBnT = {mQwXy = dNqKsF.token, bKfRt = tGjHvS, qJpLs = 3, vNxWz = 0, dGhTv = 5}
+		return dNqKsF.token
 	end
 
 	return mZvBnT.mQwXy
