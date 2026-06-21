@@ -2,15 +2,8 @@ if not game:IsLoaded() then
 	game.Loaded:Wait()
 end
 
-if not LPH_OBFUSCATED then
-	LPH_ENCSTR = function(...) return ... end
-	LPH_JIT_MAX = function(...) return ... end
-	LPH_NO_VIRTUALIZE = function(f) return f end
-	LPH_NO_UPVALUES = function(...) return ... end
-	LPH_CRASH = function(...) return ... end
-else
-	print = function() end
-	warn = function() end
+if LPH_OBFUSCATED == nil then
+	LPH_ENCSTR = function(s) return s end
 end
 
 local xYqKpR = game:GetService("HttpService")
