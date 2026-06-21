@@ -52,11 +52,11 @@ end
 local function qiu83y(xfy3ka)
 	xfy3ka = tonumber(xfy3ka) or 6
 
-	for attempt = 1, xfy3ka do
-		local g8r7m6 = qiey1x(attempt > 1)
+	for etk98o = 1, xfy3ka do
+		local g8r7m6 = qiey1x(etk98o > 1)
 
 		if type(g8r7m6) ~= "string" or g8r7m6 == "" then
-			if attempt < xfy3ka then task.wait(0.2) end
+			if etk98o < xfy3ka then task.wait(0.2) end
 			continue
 		end
 
@@ -70,7 +70,7 @@ local function qiu83y(xfy3ka)
 			return lco65o
 		end
 
-		if attempt < xfy3ka then 
+		if etk98o < xfy3ka then 
 			task.wait(0.2) 
 		end
 	end
