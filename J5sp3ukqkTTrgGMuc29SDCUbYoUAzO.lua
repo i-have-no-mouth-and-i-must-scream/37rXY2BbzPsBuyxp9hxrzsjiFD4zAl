@@ -59,12 +59,6 @@ end
 
 local BnKvQr = wYzJnX()
 
-local Library = getgenv().Library
-if type(Library) ~= "table" then
-	Library = {}
-	getgenv().Library = Library
-end
-
 local Library do
 	if type(BnKvQr) ~= "string" then Library = nil return end
 	local XwRjKv = loadstring(BnKvQr)
@@ -80,4 +74,6 @@ local Library do
 	end
 end
 
-if type(Library) ~= "table" or type(Library.Window) ~= "function" then return warn("UI library failed to load") end
+if type(Library) ~= "table" or type(Library.Window) ~= "function" then return end
+
+return Library
